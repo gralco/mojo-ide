@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="build" name="Create Runnable Jar for Project Mojo Loader with libraries in sub-folder">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <target name="build">
+        <jar destfile="build/shared/mojo-loader.jar">
+            <manifest>
+                <attribute name="Main-Class" value="com.embeddedmicro.mojo.MainWindow"/>
+                <attribute name="Class-Path" value=". ./swt.jar ./RXTXcomm.jar"/>
+            </manifest>
+            <fileset dir="/home/justin/workspace/Mojo Loader/bin"/>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete file="build/shared/mojo-loader.jar" />
+    </target>
+</project>
