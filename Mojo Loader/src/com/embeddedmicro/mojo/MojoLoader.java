@@ -75,19 +75,20 @@ public class MojoLoader {
 				} catch (InterruptedException e) {
 
 				}
-				if (System.currentTimeMillis() - initTime >= timeout)
-					throw new TimeoutException(
-							"Timeout while reading from serial port!");
+				if (System.currentTimeMillis() - initTime >= timeout) {
+					return -1;
+					//throw new TimeoutException(
+					//		"Timeout while reading from serial port!");
+				}
 			}
 	}
-	
+
 	private void restartMojo() throws InterruptedException {
 		serialPort.setDTR(true);
 		Thread.sleep(5);
 		serialPort.setDTR(false);
 		Thread.sleep(5);
 		serialPort.setDTR(true);
-		Thread.sleep(700);
 	}
 
 	public void clearFlash(final String port) {
@@ -110,17 +111,9 @@ public class MojoLoader {
 				}
 
 				try {
-					out.write('!'); // Interrupt boot process
-					while (in.available() > 0)
-						in.skip(in.available()); // Flush the buffer
-					if (read(1000) != 'R') {
-						onError("Mojo did not respond! Make sure the port is correct.");
-						return;
-					}
+					updateText("Erasing...");
 
-					updateText("Clearing...");
-
-					out.write('C'); // Write to flash
+					out.write('E'); // Erase flash
 
 					if (read(1000) != 'D') {
 						onError("Mojo did not acknowledge flash erase!");
@@ -184,24 +177,28 @@ public class MojoLoader {
 				}
 
 				try {
-					out.write('!'); // Interrupt boot process
 					while (in.available() > 0)
 						in.skip(in.available()); // Flush the buffer
+
+					updateText("Loading...");
+
+					if (flash) {
+						if (verify)
+							out.write('V'); // Write to flash
+						else
+							out.write('F');
+					} else {
+						out.write('R'); // Write to FPGA
+					}
+
 					if (read(1000) != 'R') {
 						onError("Mojo did not respond! Make sure the port is correct.");
 						bin.close();
 						return;
 					}
 
-					updateText("Loading...");
-
-					if (flash) {
-						out.write('W'); // Write to flash
-					} else {
-						out.write('I'); // Write to FPGA
-					}
-
 					int length = (int) file.length();
+					
 					byte[] buff = new byte[4];
 
 					for (int i = 0; i < 4; i++) {
@@ -227,8 +224,8 @@ public class MojoLoader {
 						if (avail == 0)
 							break;
 						int read = bin.read(data, 0, avail);
-						out.write(data,0,read);
-						count+=read;
+						out.write(data, 0, read);
+						count += read;
 
 						if (count - oldCount > percent) {
 							oldCount = count;
@@ -248,13 +245,9 @@ public class MojoLoader {
 					if (flash && verify) {
 						updateText("Verifying...");
 						bin = new BufferedInputStream(new FileInputStream(file));
-						out.write('R');
+						out.write('S');
 
 						int size = (int) (file.length() + 5);
-						for (int i = 0; i < 4; i++) {
-							buff[i] = (byte) (size >> (i * 8) & 0xff);
-						}
-						out.write(buff);
 
 						int tmp;
 						if ((tmp = read(1000)) != 0xAA) {
@@ -279,8 +272,9 @@ public class MojoLoader {
 						count = 0;
 						oldCount = 0;
 						while ((num = bin.read()) != -1) {
-							if (read(1000) != num) {
-								onError("Verification failed!");
+							int d = read(1000);
+							if (d != num) {
+								onError("Verification failed at byte " + count + "\nExpected " + num + " got " + d);
 								bin.close();
 								return;
 							}
@@ -294,16 +288,6 @@ public class MojoLoader {
 					}
 
 					bin.close();
-
-					if (flash) {
-						out.write('L');
-						if (read(2000) != 'O') {
-							onError("Could not start FPGA!");
-							return;
-						}
-					}
-
-					out.write('S');
 				} catch (IOException | TimeoutException e) {
 					onError(e.getMessage());
 					return;

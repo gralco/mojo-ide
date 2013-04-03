@@ -8,7 +8,7 @@
                 <attribute name="Main-Class" value="com.embeddedmicro.mojo.MainWindow"/>
                 <attribute name="Class-Path" value=". ./swt.jar ./RXTXcomm.jar"/>
             </manifest>
-            <fileset dir="/home/justin/workspace/Mojo Loader/bin"/>
+            <fileset dir="bin"/>
         </jar>
     </target>
 

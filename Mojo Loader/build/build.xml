@@ -165,7 +165,7 @@
 
     <echo>
       =======================================================
-      Arduino for Linux was built. Grab the archive from   
+      Mojo Loader for Linux was built. Grab the archive from   
       
       build/linux/mojo-loader-${version}-${target.os}.tgz
       =======================================================
@@ -251,7 +251,7 @@
 
     <echo>
       =======================================================
-      Arduino for Windows was built. Grab the archive from   
+      Mojo Loader for Windows was built. Grab the archive from   
       
       build/linux/mojo-loader-${version}-windows.zip
       =======================================================
