@@ -89,6 +89,7 @@ public class MojoLoader {
 		serialPort.setDTR(false);
 		Thread.sleep(5);
 		serialPort.setDTR(true);
+		Thread.sleep(5);
 	}
 
 	public void clearFlash(final String port) {
@@ -112,6 +113,9 @@ public class MojoLoader {
 
 				try {
 					updateText("Erasing...");
+					
+					while (in.available() > 0)
+						in.skip(in.available()); // Flush the buffer
 
 					out.write('E'); // Erase flash
 
@@ -274,7 +278,9 @@ public class MojoLoader {
 						while ((num = bin.read()) != -1) {
 							int d = read(1000);
 							if (d != num) {
-								onError("Verification failed at byte " + count + "\nExpected " + num + " got " + d);
+								onError("Verification failed at byte " + count +
+										" out of " + length +
+										"\nExpected " + num + " got " + d);
 								bin.close();
 								return;
 							}
@@ -284,6 +290,15 @@ public class MojoLoader {
 								float prog = (float) count / length;
 								updateProgress(prog);
 							}
+						}
+					}
+					
+					if (flash) {
+						out.write('L');
+						if (read(3000) != 'D') {
+							onError("Could not load from flash!");
+							bin.close();
+							return;
 						}
 					}
 

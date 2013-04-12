@@ -208,6 +208,10 @@
     <copy todir="work/windows">
       <fileset dir="windows" includes="java/**" />
     </copy>
+  	
+  	<copy todir="work/windows">
+  	      <fileset dir="windows" includes="MojoDriver.inf" />
+  	</copy>
 
    <!-- <antcall target="assemble">
       <param name="target.path" value="windows/work" />

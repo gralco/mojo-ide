@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 public class MainWindow implements Callback {
-	private static final String VERSION = "1.1.0";
+	private static final String VERSION = "1.1.1";
 	protected final Display display = Display.getDefault();
 	protected Shell shlMojoLoader;
 	private Text text;
