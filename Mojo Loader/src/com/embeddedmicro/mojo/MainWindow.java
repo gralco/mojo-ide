@@ -38,12 +38,45 @@ public class MainWindow implements Callback {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		try {
-			MainWindow window = new MainWindow();
-			window.open();
-		} catch (Exception e) {
-			e.printStackTrace();
+		boolean term = false;
+		String port = null;
+		String binFile = null;
+		boolean flash = false;
+		boolean verify = false;
+		
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].equals("-t"))
+				term = true;
+			else if (args[i].equals("-p") && i < args.length - 1)
+				port = args[++i];
+			else if (args[i].equals("-b") && i < args.length - 1)
+				binFile = args[++i];
+			else if (args[i].equals("-f"))
+				flash = true;
+			else if (args[i].equals("-v"))
+				verify = true;
 		}
+		if (term) {
+			if (port == null) {
+				System.err.println("You must specify a port using the -p flag!");
+				return;
+			}
+			if (binFile == null){
+				System.err.println("You must specify a bin file using the -b flag!");
+				return;
+			}
+			
+			MojoLoader loader = new MojoLoader(null, null, null, true);
+			loader.sendBin(port, binFile, flash, verify);
+		} else {
+			try {
+				MainWindow window = new MainWindow();
+				window.open();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return;
 	}
 
 	/**
@@ -140,9 +173,10 @@ public class MainWindow implements Callback {
 		btnVerify = new Button(shlMojoLoader, SWT.CHECK);
 		btnVerify.setSelection(true);
 		btnVerify.setText("Verify Flash");
-		
+
 		btnClear = new Button(shlMojoLoader, SWT.NONE);
-		btnClear.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+		btnClear.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false,
+				1, 1));
 		btnClear.setText("Erase");
 		btnClear.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -152,11 +186,12 @@ public class MainWindow implements Callback {
 			}
 		});
 
-		final TextProgressBar progressBar = new TextProgressBar(shlMojoLoader, SWT.NONE);
+		final TextProgressBar progressBar = new TextProgressBar(shlMojoLoader,
+				SWT.NONE);
 		progressBar.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false,
 				false, 3, 1));
 
-		loader = new MojoLoader(display, progressBar, MainWindow.this);
+		loader = new MojoLoader(display, progressBar, MainWindow.this, false);
 
 		btnLoad = new Button(shlMojoLoader, SWT.NONE);
 		btnLoad.addSelectionListener(new SelectionAdapter() {
@@ -199,12 +234,12 @@ public class MainWindow implements Callback {
 		display.asyncExec(new Runnable() {
 			public void run() {
 				// Message with ok and cancel button and info icon
-				MessageBox dialog = new MessageBox(shlMojoLoader, SWT.ICON_ERROR
-						| SWT.OK);
+				MessageBox dialog = new MessageBox(shlMojoLoader,
+						SWT.ICON_ERROR | SWT.OK);
 				dialog.setText("Error!");
 				dialog.setMessage(error);
 				dialog.open();
-				
+
 				setUI(true);
 			}
 		});
