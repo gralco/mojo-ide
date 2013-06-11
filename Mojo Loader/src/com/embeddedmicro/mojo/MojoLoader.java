@@ -57,7 +57,8 @@ public class MojoLoader {
 				}
 			});
 		} else {
-			System.out.print("\r\33[20C" + String.format("%-4s", (int) (value * 100.0f) + "%"));
+			System.out.print("\r\33[20C"
+					+ String.format("%-4s", (int) (value * 100.0f) + "%"));
 		}
 	}
 
@@ -111,7 +112,7 @@ public class MojoLoader {
 				try {
 					connect(port);
 				} catch (Exception e) {
-					onError(e.getMessage());
+					onError("Could not connect to port " + port + "!");
 					return;
 				}
 
@@ -168,7 +169,7 @@ public class MojoLoader {
 				try {
 					connect(port);
 				} catch (Exception e) {
-					onError(e.getMessage());
+					onError("Could not connect to port " + port + "!");
 					return;
 				}
 
@@ -344,6 +345,8 @@ public class MojoLoader {
 	}
 
 	private void onError(String e) {
+		if (e == null)
+			e = "";
 		if (callback != null)
 			callback.onError(e);
 		updateProgress(0.0f);

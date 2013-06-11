@@ -1,6 +1,7 @@
 package com.embeddedmicro.mojo;
 
 import java.util.ArrayList;
+import java.util.prefs.Preferences;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
@@ -20,7 +21,9 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 public class MainWindow implements Callback {
-	private static final String VERSION = "1.1.1";
+	private static final String VERSION = "1.1.2";
+	private static final String PORT_PREF = "PORT";
+	
 	protected final Display display = Display.getDefault();
 	protected Shell shlMojoLoader;
 	private Text text;
@@ -31,13 +34,18 @@ public class MainWindow implements Callback {
 	private Combo combo;
 	private MojoLoader loader;
 	private Button btnClear;
+	
+	private Preferences prefs = Preferences
+			.userNodeForPackage(com.embeddedmicro.mojo.MainWindow.class);
 
 	/**
 	 * Launch the application.
 	 * 
 	 * @param args
+	 * @wbp.parser.entryPoint
 	 */
 	public static void main(String[] args) {
+		/*
 		boolean term = false;
 		String port = null;
 		String binFile = null;
@@ -68,14 +76,14 @@ public class MainWindow implements Callback {
 			
 			MojoLoader loader = new MojoLoader(null, null, null, true);
 			loader.sendBin(port, binFile, flash, verify);
-		} else {
+		} else { */
 			try {
 				MainWindow window = new MainWindow();
 				window.open();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+		//}
 		return;
 	}
 
@@ -109,6 +117,7 @@ public class MainWindow implements Callback {
 
 	/**
 	 * Create contents of the window.
+	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
 		shlMojoLoader = new Shell();
@@ -129,13 +138,22 @@ public class MainWindow implements Callback {
 		lblNewLabel.setText("Serial Port:");
 
 		combo = new Combo(shlMojoLoader, SWT.READ_ONLY);
+		combo.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent arg0) {
+				if (!combo.getText().equals(""))
+					prefs.put(PORT_PREF, combo.getText());
+			}
+		});
 		combo.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
 				updatePorts(combo);
 			}
 		});
-		updatePorts(combo);
+		//combo.removeAll();
+		combo.add(prefs.get(PORT_PREF, ""));
+		//updatePorts(combo);
 		GridData gd_combo = new GridData(SWT.FILL, SWT.CENTER, true, false, 3,
 				1);
 		gd_combo.heightHint = 32;
