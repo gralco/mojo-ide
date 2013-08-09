@@ -24,6 +24,7 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 	private String filePath;
 	private boolean edited;
 	private CTabItem tabItem;
+	private CTabFolder tabFolder;
 	private boolean opened;
 	private AutoFormatter formatter;
 	private UndoRedo undoRedo;
@@ -32,6 +33,9 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 	public StyledCodeEditor(Composite parent, int style, CTabFolder tabFolder,
 			String file) {
 		super(parent, style);
+		
+		this.tabFolder = tabFolder;
+		
 		setAlwaysShowScrollBars(false);
 		setBackground(Theme.editorBackgroundColor);
 		setForeground(Theme.editorForegroundColor);
@@ -49,8 +53,6 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 
 		setFont(new Font(getDisplay(), "Monospace", 10, SWT.NORMAL));
 
-		opened = openFile(file);
-
 		tabItem = new CTabItem(tabFolder, SWT.CLOSE);
 
 		if (file != null)
@@ -61,13 +63,16 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		tabItem.setText(fileName);
 
 		tabItem.setControl(this);
-		tabFolder.setSelection(tabItem);
-
-		addModifyListener(this);
-		addKeyListener(new HotKeys(this));
+		
 		formatter = new AutoFormatter(this, styler);
 		addVerifyListener(formatter);
 		addModifyListener(formatter);
+		
+		opened = openFile(file);
+
+		addModifyListener(this);
+		addKeyListener(new HotKeys(this));
+		
 
 		undoRedo = new UndoRedo(this);
 		addExtendedModifyListener(undoRedo);
@@ -89,6 +94,14 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		formatter.fixIndent();
 	}
 
+	public String getFilePath() {
+		return filePath;
+	}
+	
+	public void grabFocus(){
+		tabFolder.setSelection(tabItem);
+	}
+
 	private boolean openFile(String path) {
 		String fileContents;
 		if (path != null) {
@@ -108,6 +121,7 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		filePath = path;
 		edited = false;
 		setText(fileContents);
+		tabFolder.setSelection(tabItem);
 
 		return true;
 	}

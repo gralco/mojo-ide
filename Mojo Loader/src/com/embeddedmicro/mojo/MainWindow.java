@@ -1,5 +1,6 @@
 package com.embeddedmicro.mojo;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.prefs.BackingStoreException;
@@ -10,6 +11,7 @@ import org.eclipse.swt.custom.CTabFolder2Adapter;
 import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ArmEvent;
 import org.eclipse.swt.events.ArmListener;
 import org.eclipse.swt.events.ControlAdapter;
@@ -19,6 +21,9 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -32,19 +37,33 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Label;
 
 public class MainWindow implements Callback {
 	private static final String VERSION = "0.0.0 Development";
 
 	protected final Display display = Display.getDefault();
 	protected Shell shlMojoLoader;
-	protected SashForm sashForm;
+	protected SashForm sideSashForm;
+	protected SashForm bottomSashForm;
 	protected CTabFolder tabFolder;
+	protected Tree tree;
+	protected Menu treeMenu;
 	protected Project project;
 
-	private int leftWidth, oldWeight;
+	private boolean opened;
+
+	private int leftWidth, oldLeftWeight;
+	private int bottomHeight, oldBottomWeight;
 	private ArrayList<StyledCodeEditor> editors;
+	private StyledText console;
+	private ProjectBuilder projectBuilder;
 
 	// private MojoLoader loader;
 
@@ -65,6 +84,10 @@ public class MainWindow implements Callback {
 			e.printStackTrace();
 		}
 		return;
+	}
+
+	public MainWindow() {
+		opened = false;
 	}
 
 	private static boolean parseCommand(String[] args) {
@@ -225,15 +248,28 @@ public class MainWindow implements Callback {
 				shlMojoLoader.getImage().dispose();
 				try {
 					Rectangle r = shlMojoLoader.getBounds();
-					Settings.settings.putInt(Settings.WINDOW_HEIGHT, r.height);
-					Settings.settings.putInt(Settings.WINDOW_WIDTH, r.width);
-					int[] weights = sashForm.getWeights();
+					boolean max = shlMojoLoader.getMaximized();
+					Settings.settings.putBoolean(Settings.MAXIMIZED, max);
+					if (!max) {
+						Settings.settings.putInt(Settings.WINDOW_HEIGHT,
+								r.height);
+						Settings.settings
+								.putInt(Settings.WINDOW_WIDTH, r.width);
+					}
+					int[] weights = sideSashForm.getWeights();
 					Settings.settings.putInt(
 							Settings.FILE_LIST_WIDTH,
-							leftWidth = (int) Math.round((double) sashForm
+							leftWidth = (int) Math.round((double) sideSashForm
 									.getClientArea().width
 									* (double) weights[0]
 									/ (double) (weights[0] + weights[1])));
+					weights = bottomSashForm.getWeights();
+					Settings.settings
+							.putInt(Settings.CONSOLE_HEIGHT,
+									bottomHeight = (int) Math.round((double) bottomSashForm
+											.getClientArea().height
+											* (double) weights[1]
+											/ (double) (weights[0] + weights[1])));
 					Settings.settings.flush();
 				} catch (BackingStoreException e1) {
 					System.err.println("Failed to save settings! "
@@ -251,6 +287,8 @@ public class MainWindow implements Callback {
 		shlMojoLoader.setMinimumSize(450, 178);
 		shlMojoLoader.setText("Mojo Loader Version " + VERSION);
 		shlMojoLoader.setLayout(new GridLayout(1, false));
+		shlMojoLoader.setMaximized(Settings.settings.getBoolean(
+				Settings.MAXIMIZED, false));
 
 		shlMojoLoader.setBackground(Theme.windowBackgroundColor);
 		shlMojoLoader.setForeground(Theme.windowForgroundColor);
@@ -263,14 +301,22 @@ public class MainWindow implements Callback {
 
 		Menu menu_1 = new Menu(mntmFile);
 		mntmFile.setMenu(menu_1);
-		
+
 		MenuItem mntmNewProject = new MenuItem(menu_1, SWT.NONE);
 		mntmNewProject.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				NewProjectDialog dialog = new NewProjectDialog(shlMojoLoader, SWT.DIALOG_TRIM);
-				dialog.open();
-				System.out.println("Closed");
+				NewProjectDialog dialog = new NewProjectDialog(shlMojoLoader,
+						SWT.DIALOG_TRIM);
+				shlMojoLoader.setEnabled(false);
+				Project p = dialog.open();
+				if (p != null) {
+					project = p;
+					project.setShell(shlMojoLoader);
+					project.setTree(tree);
+					project.updateTree();
+				}
+				shlMojoLoader.setEnabled(true);
 			}
 		});
 		mntmNewProject.setText("New Project...");
@@ -356,24 +402,59 @@ public class MainWindow implements Callback {
 		composite.setForeground(Theme.windowForgroundColor);
 		RowLayout rl_composite = new RowLayout(SWT.HORIZONTAL);
 		composite.setLayout(rl_composite);
-		
+
 		CustomButton newbtn = new CustomButton(composite, SWT.NONE);
 		newbtn.setIcon(Images.fileIcon);
 		newbtn.setToolTipText("New File");
 		newbtn.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				//TODO: New event
+				if (project.isOpen()) {
+					NewSourceDialog dialog = new NewSourceDialog(shlMojoLoader,
+							SWT.DIALOG_TRIM);
+					shlMojoLoader.setEnabled(false);
+					SourceFile file = dialog.open();
+					if (file != null) {
+						String filePath = null;
+						switch (file.type) {
+						case SourceFile.SOURCE:
+							if ((filePath = project
+									.addSourceFile(file.fileName)) == null)
+								showError("Could not create new source file!");
+							break;
+						case SourceFile.CONSTRAINT:
+							if ((filePath = project
+									.addConstraintFile(file.fileName)) == null)
+								showError("Could not create constraint file!");
+							break;
+						}
+
+						if (filePath != null)
+							openFile(filePath);
+					}
+					try {
+						project.saveXML();
+					} catch (IOException e) {
+						showError("Failed to save project file!");
+					}
+					shlMojoLoader.setEnabled(true);
+				} else {
+					showError("A project must be open to add a new file.");
+				}
 			}
 		});
-		
+
 		CustomButton buildbtn = new CustomButton(composite, SWT.NONE);
 		buildbtn.setIcon(Images.buildIcon);
 		buildbtn.setToolTipText("Build Project");
 		buildbtn.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				//TODO: Build event
+				if (projectBuilder.isBuilding()){
+					showError("Your project is already building!");
+					return;
+				}
+				projectBuilder.buildProject(project);
 			}
 		});
 
@@ -383,16 +464,44 @@ public class MainWindow implements Callback {
 		loadbtn.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				//TODO: Load event
+				// TODO: Load event
 			}
 		});
-		
-		sashForm = new SashForm(shlMojoLoader, SWT.NONE);
-		sashForm.addControlListener(new ControlAdapter() {
+
+		project = new Project(shlMojoLoader);
+
+		bottomSashForm = new SashForm(shlMojoLoader, SWT.VERTICAL);
+		bottomSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+				true, 1, 1));
+		bottomSashForm.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
-				int width = sashForm.getClientArea().width;
-				int[] weights = sashForm.getWeights();
+				int height = bottomSashForm.getClientArea().height;
+				int[] weights = bottomSashForm.getWeights();
+
+				double perBottom = (double) bottomHeight / (double) height;
+
+				if (perBottom < 0.8) {
+					weights[1] = (int) (perBottom * 1000.0);
+					weights[0] = 1000 - weights[1];
+				} else {
+					weights[1] = 800;
+					weights[0] = 200;
+				}
+
+				// oldWeights must be set before form.setWeights
+				oldBottomWeight = weights[0];
+				bottomSashForm.setWeights(weights);
+			}
+		});
+		bottomSashForm.setBackground(Theme.windowBackgroundColor);
+
+		sideSashForm = new SashForm(bottomSashForm, SWT.NONE);
+		sideSashForm.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				int width = sideSashForm.getClientArea().width;
+				int[] weights = sideSashForm.getWeights();
 
 				double perLeft = (double) leftWidth / (double) width;
 
@@ -405,40 +514,138 @@ public class MainWindow implements Callback {
 				}
 
 				// oldWeights must be set before form.setWeights
-				oldWeight = weights[0];
-				sashForm.setWeights(weights);
+				oldLeftWeight = weights[0];
+				sideSashForm.setWeights(weights);
 			}
 		});
-		GridData gd_sashForm = new GridData(SWT.FILL, SWT.FILL, true, true, 1,
-				1);
-		gd_sashForm.widthHint = 867;
-		sashForm.setLayoutData(gd_sashForm);
-		sashForm.setBackground(Theme.windowBackgroundColor);
+		sideSashForm.setBackground(Theme.windowBackgroundColor);
 
-		project = new Project(sashForm, SWT.NONE);
-		project.addControlListener(new ControlAdapter() {
+		tree = new Tree(sideSashForm, SWT.NONE);
+		tree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDoubleClick(MouseEvent event) {
+				Point point = new Point(event.x, event.y);
+				TreeItem item = tree.getItem(point);
+				if (item != null) {
+					if (item.getItemCount() > 0) {
+						if (item.getExpanded()) {
+							item.setExpanded(false);
+						} else {
+							item.setExpanded(true);
+						}
+					} else {
+						if (item.getParentItem().getText().equals("Source"))
+							openFile(project.getFolder() + File.separatorChar
+									+ "source" + File.separatorChar
+									+ item.getText());
+						else if (item.getParentItem().getText()
+								.equals("Constraint"))
+							openFile(project.getFolder() + File.separatorChar
+									+ "constraint" + File.separatorChar
+									+ item.getText());
+					}
+				}
+			}
+
+			@Override
+			public void mouseDown(MouseEvent event) {
+				if (event.button == 3) { // right click
+					Point point = new Point(event.x, event.y);
+					final TreeItem item = tree.getItem(point);
+					for (MenuItem i : treeMenu.getItems())
+						i.dispose();
+					if (item != null) {
+						MenuItem mi = new MenuItem(treeMenu, SWT.NONE);
+						mi.setText("Remove " + item.getText());
+						mi.setData(item.getText());
+						mi.addSelectionListener(new SelectionListener() {
+
+							@Override
+							public void widgetSelected(SelectionEvent e) {
+								if (item.getParentItem().getText()
+										.equals("Source")) {
+									if (!project
+											.removeSourceFile((String) ((MenuItem) e
+													.getSource()).getData()))
+										showError("Could not remove file!");
+								} else if (item.getParentItem().getText()
+										.equals("Constraint")) {
+									if (!project
+											.removeConstaintFile((String) ((MenuItem) e
+													.getSource()).getData()))
+										showError("Could not remove file!");
+								}
+							}
+
+							@Override
+							public void widgetDefaultSelected(SelectionEvent e) {
+							}
+						});
+					}
+				}
+			}
+		});
+		tree.setBackground(Theme.editorBackgroundColor);
+		tree.setForeground(Theme.editorForegroundColor);
+		tree.addListener(SWT.EraseItem, new Listener() {
+			public void handleEvent(Event event) {
+				if ((event.detail & SWT.SELECTED) != 0) {
+					GC gc = event.gc;
+
+					Rectangle rect = event.getBounds();
+					Color foreground = gc.getForeground();
+					Color background = gc.getBackground();
+					if (tree.isFocusControl())
+						gc.setBackground(Theme.treeSelectedFocusedColor);
+					else
+						gc.setBackground(Theme.treeSelectedColor);
+					gc.fillRectangle(rect);
+					// restore colors for subsequent drawing
+					gc.setForeground(foreground);
+					gc.setBackground(background);
+					event.detail &= ~SWT.SELECTED;
+				}
+			}
+		});
+
+		tree.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
-				int[] weights = sashForm.getWeights();
-				if (oldWeight != weights[0]) {
-					oldWeight = weights[0];
-					leftWidth = (int) Math.round((double) sashForm
+				int[] weights = sideSashForm.getWeights();
+				if (oldLeftWeight != weights[0]) {
+					oldLeftWeight = weights[0];
+					leftWidth = (int) Math.round((double) sideSashForm
 							.getClientArea().width
 							* (double) weights[0]
+							/ (double) (weights[0] + weights[1]));
+				}
+
+				weights = bottomSashForm.getWeights();
+
+				if (oldBottomWeight != weights[1]) {
+					oldBottomWeight = weights[1];
+					bottomHeight = (int) Math.round((double) bottomSashForm
+							.getClientArea().height
+							* (double) weights[1]
 							/ (double) (weights[0] + weights[1]));
 				}
 			}
 		});
 
-		tabFolder = new CTabFolder(sashForm, SWT.BORDER);
+		treeMenu = new Menu(shlMojoLoader, SWT.POP_UP);
+		tree.setMenu(treeMenu);
+		project.setTree(tree);
+
+		tabFolder = new CTabFolder(sideSashForm, SWT.NULL);
 		tabFolder.setSimple(false);
 		tabFolder.setDragDetect(true);
-		DragNDropListener dndListner = new DragNDropListener(tabFolder, display);
-		tabFolder.addListener(SWT.DragDetect, dndListner);
-		tabFolder.addListener(SWT.MouseUp, dndListner);
-		tabFolder.addListener(SWT.MouseMove, dndListner);
-		tabFolder.addListener(SWT.MouseExit, dndListner);
-		tabFolder.addListener(SWT.MouseEnter, dndListner);
+		// DragNDropListener dndListner = new DragNDropListener(tabFolder,
+		// display);
+		// tabFolder.addListener(SWT.DragDetect, dndListner);
+		// tabFolder.addListener(SWT.MouseUp, dndListner);
+		// tabFolder.addListener(SWT.MouseMove, dndListner);
+		// tabFolder.addListener(SWT.MouseExit, dndListner);
+		// tabFolder.addListener(SWT.MouseEnter, dndListner);
 		tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
 			@Override
 			public void close(CTabFolderEvent event) {
@@ -453,22 +660,49 @@ public class MainWindow implements Callback {
 		tabFolder.setForeground(Theme.tabForegroundColor);
 		tabFolder.setSelectionBackground(Theme.tabSelectedBackgroundColor);
 		tabFolder.setSelectionForeground(Theme.tabSelectedForegroundColor);
+
+		console = new StyledText(bottomSashForm, SWT.READ_ONLY | SWT.H_SCROLL
+				| SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+		console.setBackground(Theme.consoleBackgroundColor);
+		console.setForeground(Theme.consoleForgoundColor);
+		console.setAlwaysShowScrollBars(false);
+		bottomSashForm.setWeights(new int[] { 8, 2 });
+
 		openFile(null);
 
 		leftWidth = Settings.settings.getInt(Settings.FILE_LIST_WIDTH, 200);
+		bottomHeight = Settings.settings.getInt(Settings.CONSOLE_HEIGHT, 200);
+		
+		projectBuilder = new ProjectBuilder(display, shlMojoLoader, console);
+	}
+
+	private void showError(String error) {
+		MessageBox b = new MessageBox(shlMojoLoader, SWT.OK | SWT.ERROR);
+		b.setText("Error!");
+		b.setMessage(error);
+		b.open();
 	}
 
 	private boolean openFile(String path) {
+		for (StyledCodeEditor editor : editors) {
+			if (editor.getFilePath() != null
+					&& editor.getFilePath().equals(path)) {
+				editor.grabFocus();
+				return true;
+			}
+		}
+
 		final StyledCodeEditor codeEditor = new StyledCodeEditor(tabFolder,
 				SWT.V_SCROLL | SWT.MULTI | SWT.H_SCROLL, tabFolder, path);
 
 		if (codeEditor.isOpen()) {
-			if (editors.size() == 1
-					&& editors.get(0).getFileName().equals("Untitled")
-					&& !editors.get(0).isModifed()) {
+			int size = editors.size();
+			if (size == 1 && !opened && !editors.get(0).isModifed()) {
 				editors.get(0).dispose();
 				editors.remove(0);
 			}
+			if (size > 0)
+				opened = true;
 			editors.add(codeEditor);
 			return true;
 		}

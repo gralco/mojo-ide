@@ -20,7 +20,7 @@ public class LineHighlighter implements CaretListener, ExtendedModifyListener {
 	@Override
 	public void caretMoved(CaretEvent event) {
 		int activeLine = styledText.getLineAtOffset(event.caretOffset);
-
+ 
 		if (curActiveLine != activeLine) {
 			int digits = 3;
 			if (styledText.getLineCount() > 999)
@@ -50,7 +50,7 @@ public class LineHighlighter implements CaretListener, ExtendedModifyListener {
 		int startLine = styledText.getLineAtOffset(event.start);
 		int endLine = styledText
 				.getLineAtOffset(event.start + event.length);
-		if (startLine != endLine) {
+		if (startLine != endLine || event.replacedText.contains(System.lineSeparator())) {
 			styledText.redraw(0, styledText.getLinePixel(startLine), digits * 12,
 					styledText.getLineHeight() * (lineCount-startLine), true);
 		}

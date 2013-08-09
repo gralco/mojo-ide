@@ -8,7 +8,7 @@ public class Tags {
 	
 	public static class Attributes {
 		public final static String top = "top";
-		//public final static String directory = "dir";
 		public final static String name = "name";
+		public final static String board = "board";
 	}
 }

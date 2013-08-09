@@ -25,6 +25,9 @@ public class Theme {
 	public static Color treeSelectedColor;
 	public static Color toolBarHoverColor;
 	public static Color toolBarClickColor;
+	public static Color consoleBackgroundColor;
+	public static Color consoleForgoundColor;
+	public static Color errorTextColor;
 
 	public static void initColors(Display display) {
 		keyWordColor = new Color(display, 134, 138, 245);
@@ -48,9 +51,12 @@ public class Theme {
 		treeSelectedColor = highlightedLineColor;
 		toolBarHoverColor = treeSelectedFocusedColor;
 		toolBarClickColor = new Color(display, 35, 160, 35);
+		consoleBackgroundColor = editorBackgroundColor;
+		consoleForgoundColor = editorForegroundColor;
+		errorTextColor = new Color(display, 255, 75, 75);
 	}
-	
-	public static void dispose(){
+
+	public static void dispose() {
 		keyWordColor.dispose();
 		valueColor.dispose();
 		varTypeColor.dispose();
@@ -72,5 +78,8 @@ public class Theme {
 		treeSelectedColor.dispose();
 		toolBarHoverColor.dispose();
 		toolBarClickColor.dispose();
+		consoleBackgroundColor.dispose();
+		consoleForgoundColor.dispose();
+		errorTextColor.dispose();
 	}
 }

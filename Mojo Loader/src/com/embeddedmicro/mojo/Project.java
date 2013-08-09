@@ -4,17 +4,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.graphics.Region;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.jdom2.Attribute;
@@ -30,38 +27,35 @@ public class Project {
 	private ArrayList<String> ucfFiles;
 	private String topSource;
 	private String projectName;
+	private String projectFolder;
 	private String projectFile;
+	private String boardType;
 	private boolean open;
 	private Tree tree;
+	private Shell shell;
 
-	public Project(Composite parent, int style) {
-		tree = new Tree(parent, style);
-		tree.setBackground(Theme.editorBackgroundColor);
-		tree.setForeground(Theme.editorForegroundColor);
-		tree.addListener(SWT.EraseItem, new Listener() {
-			public void handleEvent(Event event) {
-				if ((event.detail & SWT.SELECTED) != 0) {
-					GC gc = event.gc;
+	public Project(String name, String folder, String board) {
+		this(null);
+		projectName = name;
+		projectFolder = folder;
+		boardType = board;
+		projectFile = name + ".mojo";
+		open = true;
+	}
 
-					Rectangle rect = event.getBounds();
-					Color foreground = gc.getForeground();
-					Color background = gc.getBackground();
-					if (tree.isFocusControl())
-						gc.setBackground(Theme.treeSelectedFocusedColor);
-					else
-						gc.setBackground(Theme.treeSelectedColor);
-					gc.fillRectangle(rect);
-					// restore colors for subsequent drawing
-					gc.setForeground(foreground);
-					gc.setBackground(background);
-					event.detail &= ~SWT.SELECTED;
-				}
-			}
-		});
-
+	public Project(Shell shell) {
+		this.shell = shell;
 		sourceFiles = new ArrayList<>();
 		ucfFiles = new ArrayList<>();
 		open = false;
+	}
+
+	public void setTree(Tree tree) {
+		this.tree = tree;
+	}
+
+	public void setShell(Shell shell) {
+		this.shell = shell;
 	}
 
 	public void addControlListener(ControlListener listener) {
@@ -72,21 +66,139 @@ public class Project {
 		return open;
 	}
 
-	public void addSourceFile(String file) {
+	public String getFolder() {
+		return projectFolder;
+	}
+
+	private String addFile(String fileName, String folder,
+			ArrayList<String> list) {
+		File file = new File(projectFolder + File.separatorChar + folder
+				+ File.separatorChar + fileName);
+		try {
+			if (file.exists()) {
+				MessageBox b = new MessageBox(shell, SWT.YES | SWT.NO);
+				b.setText("File Exists");
+				b.setMessage("File " + fileName + " exists. Overwrite?");
+				int r = b.open();
+				if (r != SWT.YES) {
+					return null;
+				}
+				file.delete();
+			}
+			if (file.createNewFile()) {
+				if (!list.contains(fileName))
+					list.add(fileName);
+				updateTree();
+				return file.getAbsolutePath();
+			}
+		} catch (IOException e) {
+			System.err.print(e);
+			return null;
+		}
+		System.err.println("Could not open file " + file.getAbsolutePath());
+		return null;
+	}
+	
+	public boolean removeSourceFile(String fileName){
+		File file = new File(projectFolder+File.separatorChar+"source"+File.separatorChar+fileName);
+		if (file.exists() && !file.delete()){
+			return false;
+		}
+		boolean ret = sourceFiles.remove(fileName);
+		updateTree();
+		return ret;
+	}
+	
+	public boolean removeConstaintFile(String fileName){
+		File file = new File(projectFolder+File.separatorChar+"constraint"+File.separatorChar+fileName);
+		if (file.exists() && !file.delete()){
+			return false;
+		}
+		boolean ret = ucfFiles.remove(fileName);
+		updateTree();
+		return ret;
+	}
+
+	public String addSourceFile(String fileName) {
+		return addFile(fileName, "source", sourceFiles);
+	}
+
+	public String addConstraintFile(String fileName) {
+		return addFile(fileName, "constraint", ucfFiles);
+	}
+	
+	public String getSourceFolder(){
+		return projectFolder + File.separatorChar + "source";
+	}
+	
+	public String getConstraintFolder(){
+		return projectFolder + File.separatorChar + "constraint";
+	}
+
+	public void addExistingSourceFile(String file) {
 		sourceFiles.add(file);
 	}
 
-	public void addUCFFile(String file) {
+	public void addExistingUCFFile(String file) {
 		ucfFiles.add(file);
 	}
 
+	public boolean setTopFile(String file) {
+		if (sourceFiles.contains(file)) {
+			topSource = file;
+			return true;
+		}
+		return false;
+	}
+	
+	public String getTop(){
+		return topSource;
+	}
+	
+	public ArrayList<String> getSourceFiles(){
+		return sourceFiles;
+	}
+	
+	public ArrayList<String> getConstraintFiles(){
+		return ucfFiles;
+	}
+
+	public String getProjectName(){
+		return projectName;
+	}
+	
+	public String getBoardType(){
+		return boardType;
+	}
+	
 	public void setProjectName(String name) {
 		projectName = name;
 	}
 
+	public void setBoardType(String type) {
+		boardType = type;
+	}
+
+	public void setProjectFolder(String folder) {
+		projectFolder = folder;
+	}
+
+	public void setProjectFile(String file) {
+		projectFile = file;
+	}
+
+	private class SortIgnoreCase implements Comparator<Object> {
+		public int compare(Object o1, Object o2) {
+			String s1 = (String) o1;
+			String s2 = (String) o2;
+			return s1.toLowerCase().compareTo(s2.toLowerCase());
+		}
+	}
+
 	public void updateTree() {
 		if (open) {
-			tree.clearAll(true);
+			// tree.clearAll(true);
+			tree.removeAll();
 			TreeItem project = new TreeItem(tree, SWT.NONE);
 			project.setText(projectName);
 
@@ -94,11 +206,13 @@ public class Project {
 			sourceBranch.setText("Source");
 
 			TreeItem ucfBranch = new TreeItem(project, SWT.NONE);
-			ucfBranch.setText("Constraints");
+			ucfBranch.setText("Constraint");
 
+			Collections.sort(sourceFiles, new SortIgnoreCase());
 			for (String source : sourceFiles) {
 				new TreeItem(sourceBranch, SWT.NONE).setText(source);
 			}
+			Collections.sort(ucfFiles, new SortIgnoreCase());
 			for (String ucf : ucfFiles) {
 				new TreeItem(ucfBranch, SWT.NONE).setText(ucf);
 			}
@@ -112,10 +226,11 @@ public class Project {
 		ucfFiles.clear();
 		topSource = null;
 		projectName = null;
-		projectFile = xmlPath;
 
 		SAXBuilder builder = new SAXBuilder();
 		File xmlFile = new File(xmlPath);
+		projectFolder = xmlFile.getParent();
+		projectFile = xmlFile.getName();
 
 		Document document;
 		try {
@@ -134,6 +249,12 @@ public class Project {
 			throw new ParseException("Project name is missing");
 		}
 		projectName = projName.getValue();
+
+		Attribute brdType = project.getAttribute(Tags.Attributes.board);
+		if (brdType == null) {
+			throw new ParseException("Board type is missing");
+		}
+		boardType = brdType.getValue();
 
 		final List<Element> list = project.getChildren();
 		for (int i = 0; i < list.size(); i++) {
@@ -172,13 +293,14 @@ public class Project {
 	}
 
 	public void saveXML() throws IOException {
-		saveXML(projectFile);
+		saveXML(projectFolder + File.separatorChar + projectFile);
 	}
 
 	public void saveXML(String file) throws IOException {
 		Element project = new Element(Tags.project);
 
 		project.setAttribute(new Attribute(Tags.Attributes.name, projectName));
+		project.setAttribute(new Attribute(Tags.Attributes.board, boardType));
 		Document doc = new Document(project);
 
 		Element source = new Element(Tags.files);

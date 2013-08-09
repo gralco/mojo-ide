@@ -19,6 +19,9 @@ public class HotKeys implements KeyListener {
 				case 'z':
 					editor.redo(); // CTRL + SHIFT + z
 					break;
+				case 'f':
+					editor.formatText();
+					break;
 				}
 			} else {
 				switch (e.keyCode) {
@@ -27,9 +30,6 @@ public class HotKeys implements KeyListener {
 					break;
 				case 's':
 					editor.save();
-					break;
-				case 'f':
-					editor.formatText();
 					break;
 				case 'z':
 					editor.undo();

@@ -72,6 +72,7 @@ public class UndoRedo implements ExtendedModifyListener {
 					replacedText));
 			editor.replaceTextRange(edit.start, edit.length, edit.text);
 			editor.setCaretOffset(edit.start + edit.text.length());
+			editor.update();
 		}
 	}
 

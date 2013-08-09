@@ -21,12 +21,19 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 	private static class IndentTag {
 		public final String open;
 		public final String close;
-		public final boolean isolate;
+		public int tabs;
+		public final boolean isolateOpen;
+		public final boolean isolateClose;
+		public final boolean endNextLine;
 
-		public IndentTag(String open, String close, boolean isolate) {
+		public IndentTag(String open, String close, int tabs,
+				boolean isolateOpen, boolean isolateClose, boolean endNextLine) {
 			this.open = open;
 			this.close = close;
-			this.isolate = isolate;
+			this.tabs = tabs;
+			this.isolateOpen = isolateOpen;
+			this.isolateClose = isolateClose;
+			this.endNextLine = endNextLine;
 		}
 	}
 
@@ -39,6 +46,16 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 			this.tag = tag;
 			this.startOffset = startOffset;
 			this.endOffset = endOffset;
+		}
+
+		@Override
+		public String toString() {
+			if (tag != null)
+				return "Open: " + tag.open + " Close: " + tag.close
+						+ " Start: " + startOffset + " End: " + endOffset;
+			else
+				return "No Tag" + " Start: " + startOffset + " End: "
+						+ endOffset;
 		}
 	}
 
@@ -55,12 +72,16 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 	}
 
 	private static final IndentTag[] indentTags = {
-			new IndentTag("begin", "end", true),
-			new IndentTag("case", "endcase", true),
-			new IndentTag("casex", "endcase", true),
-			new IndentTag("module", "endmodule", true),
-			new IndentTag("generate", "endgenerate", true),
-			new IndentTag("(", ")", false) };
+			new IndentTag("begin", "end", 1, true, true, false),
+			new IndentTag("case", "endcase", 1, true, true, false),
+			new IndentTag("casex", "endcase", 1, true, true, false),
+			new IndentTag("module", "endmodule", 1, true, true, false),
+			new IndentTag("generate", "endgenerate", 1, true, true, false),
+			new IndentTag("(", ")", 1, false, false, false),
+			new IndentTag("localparam", ";", 2, true, false, true),
+			new IndentTag("reg", ";", 2, true, false, true),
+			new IndentTag("wire", ";", 2, true, false, true),
+			new IndentTag("integer", ";", 2, true, false, true) };
 
 	private static final String singleLineTags[] = { "if", "else", "always" };
 	private static final IndentTag singleLineBracketTag = indentTags[0];
@@ -78,7 +99,7 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 			if (matcher.find()) {
 				int start = matcher.start();
 				String tag;
-				if (singleLineBracketTag.isolate)
+				if (singleLineBracketTag.isolateOpen)
 					tag = "\\b" + singleLineBracketTag.open + "\\b";
 				else
 					tag = singleLineBracketTag.open;
@@ -104,32 +125,50 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		return null;
 	}
 
-	private void updateIndentList() {
+	// WARNING this function will return the first tag
+	// whose closing tag matches "string". Multiple
+	// tags may have the same closing tag.
+	private IndentTag closeStringToTag(String string) {
+		for (IndentTag tag : indentTags) {
+			if (tag.close.equals(string))
+				return tag;
+		}
+		return null;
+	}
+
+	private void matchKeys(ArrayList<IndentMatch> keyPairs) {
+		for (IndentMatch keyPair : keyPairs) {
+			if (keyPair.open) {
+				indentPairs.add(new IndentPair(openStringToTag(keyPair.string),
+						keyPair.offset, -1));
+			} else {
+				for (int i = indentPairs.size() - 1; i >= 0; i--) {
+					IndentPair pair = indentPairs.get(i);
+					if (pair.tag != null
+							&& pair.tag.close.equals(keyPair.string)
+							&& pair.endOffset == -1) {
+						if (pair.tag.endNextLine)
+							pair.endOffset = Math
+									.min(editor
+											.getOffsetAtLine(editor
+													.getLineAtOffset(keyPair.offset) + 1),
+											editor.getCharCount());
+						else
+							pair.endOffset = keyPair.offset;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	public void updateIndentList() {
 		indentPairs.clear();
 		String[] lines = editor.getText().split("(?:\r)?\n");
 		for (int lineNum = 0; lineNum < lines.length; lineNum++) {
 			String line = lines[lineNum];
-			ArrayList<IndentMatch> keyPairs = getIndentMatches(line, lineNum,
-					true, true);
 
-			for (IndentMatch keyPair : keyPairs) {
-				if (keyPair.open) {
-					indentPairs
-							.add(new IndentPair(
-									openStringToTag(keyPair.string),
-									keyPair.offset, -1));
-				} else {
-					for (int i = indentPairs.size() - 1; i >= 0; i--) {
-						IndentPair pair = indentPairs.get(i);
-						if (pair.tag != null
-								&& pair.tag.close.equals(keyPair.string)
-								&& pair.endOffset == -1) {
-							pair.endOffset = keyPair.offset;
-							break;
-						}
-					}
-				}
-			}
+			matchKeys(getIndentMatches(indentTags, line, lineNum, true, true));
 
 			if (isSingleLineIndent(line)) {
 				int endLine = Math.min(editor.getLineCount() - 1, lineNum + 2);
@@ -154,7 +193,7 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		int indent = 0;
 		for (IndentPair pair : indentPairs) {
 			if (indentPairConatins(pair, line))
-				indent++;
+				indent += pair.tag.tabs;
 		}
 		return indent;
 	}
@@ -165,7 +204,8 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		String[] lines = editor.getText().split("(?:\r)?\n");
 		for (int lineNum = 0; lineNum < lines.length; lineNum++) {
 			int indent = getIndentCount(lineNum);
-			builder.append(appendTabs(lines[lineNum], indent) + System.lineSeparator());
+			builder.append(appendTabs(lines[lineNum], indent)
+					+ System.lineSeparator());
 		}
 		int seperatorLen = System.lineSeparator().length();
 		builder.delete(builder.length() - seperatorLen, builder.length());
@@ -192,11 +232,15 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 			String line, int lineOffset, ArrayList<StyleRange> ignoreList,
 			boolean open) {
 		String string;
-		if (open)
+		boolean isolate;
+		if (open) {
 			string = indent.open;
-		else
+			isolate = indent.isolateOpen;
+		} else {
 			string = indent.close;
-		if (indent.isolate) {
+			isolate = indent.isolateClose;
+		}
+		if (isolate) {
 			Pattern pattern = Pattern.compile("\\b" + string + "\\b");
 			Matcher matcher = pattern.matcher(line);
 			while (matcher.find()) {
@@ -219,8 +263,8 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		}
 	}
 
-	private ArrayList<IndentMatch> getIndentMatches(String line, int lineNum,
-			boolean open, boolean close) {
+	private ArrayList<IndentMatch> getIndentMatches(IndentTag[] indentTags,
+			String line, int lineNum, boolean open, boolean close) {
 		ArrayList<IndentMatch> tags = new ArrayList<IndentMatch>();
 
 		int lineOffset = editor.getOffsetAtLine(lineNum);
@@ -287,11 +331,42 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		return list;
 	}
 
-	private int countTags(ArrayList<IndentMatch> list, boolean open) {
+	private boolean matchHasPair(IndentMatch match) {
+		if (match.open)
+			for (IndentPair pair : indentPairs) {
+				if (pair.startOffset == match.offset
+						&& pair.tag.open.equals(match.string))
+					return true;
+			}
+		else
+			for (IndentPair pair : indentPairs) {
+				int offset;
+				if (pair.tag.endNextLine) {
+					offset = editor.getOffsetAtLine(editor
+							.getLineAtOffset(match.offset) + 1);
+				} else {
+					offset = match.offset;
+				}
+				if (pair.endOffset == offset
+						&& pair.tag.close.equals(match.string))
+					return true;
+			}
+		return false;
+	}
+
+	private int countIndents(ArrayList<IndentMatch> list) {
 		int ct = 0;
-		for (IndentMatch match : list)
-			if (match.open == open)
-				ct++;
+		for (IndentMatch match : list) {
+
+			IndentTag tag;
+			if (match.open) {
+				tag = openStringToTag(match.string);
+				ct += tag.tabs;
+			} else if ((tag = closeStringToTag(match.string)).endNextLine
+					&& matchHasPair(match)) {
+				ct -= tag.tabs;
+			}
+		}
 		return ct;
 	}
 
@@ -308,15 +383,16 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 			if (e.text.equals(lastChar) && trimmedLine.equals(indent.close)
 					&& matchTag(trimmedLine)) {
 
-				int tabs = -getIndentMatches(line.toString(), lineNum, false,
-						true).size();
+				ArrayList<IndentMatch> matches = getIndentMatches(indentTags,
+						line.toString(), lineNum, false, true);
+				int tabs = matches.size();
 
 				if (lineNum > 0) {
 					String prevLine = editor.getLine(lineNum - 1);
 					tabs += countIndents(prevLine)
-							+ countTags(
-									removePairs(getIndentMatches(prevLine,
-											lineNum - 1, true, true)), true);
+							+ countIndents(removePairs(getIndentMatches(
+									indentTags, prevLine, lineNum - 1, true,
+									true)));
 				}
 
 				e.doit = false;
@@ -334,9 +410,8 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 			int lineNum = editor.getLineAtOffset(e.start);
 			String line = editor.getLine(lineNum);
 			int tabs = countIndents(line)
-					+ countTags(
-							removePairs(getIndentMatches(line, lineNum, true,
-									true)), true)
+					+ countIndents(removePairs(getIndentMatches(indentTags,
+							line, lineNum, true, true)))
 					+ (isSingleLineIndent(line) ? 1 : 0);
 			if (lineNum > 0) {
 				tabs -= isSingleLineIndent(editor.getLine(lineNum - 1)) ? 1 : 0;
