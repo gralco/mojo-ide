@@ -12,4 +12,6 @@ public class Settings {
 	public static final String FILE_LIST_WIDTH = "FILE_LIST_WIDTH";
 	public static final String CONSOLE_HEIGHT = "CONSOLE_HEIGHT";
 	public static final String MAXIMIZED = "MAXIMIZED";
+	public static final String PLANAHEAD_LOC = "PLANAHEAD_LOC";
+	public static final String OPEN_PROJECT = "OPEN_PROJECT";
 }

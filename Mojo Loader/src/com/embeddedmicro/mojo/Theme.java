@@ -4,6 +4,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
 public class Theme {
+	public static boolean set;
 	public static Color keyWordColor;
 	public static Color valueColor;
 	public static Color varTypeColor;
@@ -54,6 +55,7 @@ public class Theme {
 		consoleBackgroundColor = editorBackgroundColor;
 		consoleForgoundColor = editorForegroundColor;
 		errorTextColor = new Color(display, 255, 75, 75);
+		set = true;
 	}
 
 	public static void dispose() {
@@ -81,5 +83,6 @@ public class Theme {
 		consoleBackgroundColor.dispose();
 		consoleForgoundColor.dispose();
 		errorTextColor.dispose();
+		set = false;
 	}
 }

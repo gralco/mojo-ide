@@ -190,7 +190,7 @@ public class NewProjectDialog extends Dialog {
 				}
 				for (String file : source.list()) {
 					project.addExistingSourceFile(file);
-					if (file.equals(topFile.getName())) //set to newTopFIle
+					if (file.equals(topFile.getName())) //set to newTopFile if above is uncommented
 						project.setTopFile(file);
 				}
 

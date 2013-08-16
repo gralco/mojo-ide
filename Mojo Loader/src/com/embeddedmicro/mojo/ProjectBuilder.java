@@ -19,7 +19,6 @@ import com.embeddedmicro.mojo.boards.Boards;
 
 public class ProjectBuilder {
 
-	private static final String planAhead = "/opt/Xilinx/14.5/ISE_DS/PlanAhead/bin/planAhead";
 	private static final String projectFile = "project.tcl";
 	private static final String projectDir = "planAhead";
 
@@ -42,10 +41,7 @@ public class ProjectBuilder {
 			public void run() {
 				try {
 					clearText();
-					if (!ProjectBuilder.this.project.isOpen()) {
-						showError("A project must be opened before you can build it!");
-						return;
-					}
+
 					workFolder = ProjectBuilder.this.project.getFolder()
 							+ File.separatorChar + "work";
 					File destDir = new File(workFolder);
@@ -64,11 +60,23 @@ public class ProjectBuilder {
 
 					generateProjectFile(out);
 
+					String planAhead = Settings.settings.get(
+							Settings.PLANAHEAD_LOC, null);
+					if (planAhead == null) {
+						showError("PlanAhead's location must be set in the settings menu before you can build!");
+						return;
+					}
+
 					ProcessBuilder pb = new ProcessBuilder(planAhead,
 							"-nojournal", "-nolog", "-mode", "batch",
 							"-source", tclScript);
-
-					final Process p = pb.start();
+					final Process p;
+					try {
+						p = pb.start();
+					} catch (Exception e) {
+						showError("Could not start PlanAhead! Please check the location is correctly set in the settings menu.");
+						return;
+					}
 
 					new Thread() {
 						public void run() {
@@ -141,7 +149,6 @@ public class ProjectBuilder {
 					styleRange.foreground = Theme.errorTextColor;
 					console.setStyleRange(styleRange);
 				}
-				console.setTopIndex(console.getLineCount() - 1);
 			}
 		});
 	}
@@ -197,7 +204,7 @@ public class ProjectBuilder {
 				+ nl);
 		file.write("set_property top " + project.getTop().split("\\.")[0]
 				+ " [get_property srcset [current_run]]" + nl);
-		file.write("set_property -name {steps.bitgen.args.More Options} -value {-g Binary:Yes} -objects [get_runs impl_1]"
+		file.write("set_property -name {steps.bitgen.args.More Options} -value {-g Binary:Yes -g Compress} -objects [get_runs impl_1]"
 				+ nl);
 		file.write("launch_runs -runs synth_1" + nl);
 		file.write("wait_on_run synth_1" + nl);

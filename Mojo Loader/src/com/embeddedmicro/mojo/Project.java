@@ -70,6 +70,17 @@ public class Project {
 		return projectFolder;
 	}
 
+	public String getBinFile() {
+		File binFile = new File(projectFolder + File.separatorChar + "work"
+				+ File.separatorChar + "planAhead" + File.separatorChar
+				+ projectName + File.separatorChar + projectName + ".runs"
+				+ File.separatorChar + "impl_1" + File.separatorChar
+				+ topSource.split("\\.")[0] + ".bin");
+		if (binFile.exists())
+			return binFile.getAbsolutePath();
+		return null;
+	}
+
 	private String addFile(String fileName, String folder,
 			ArrayList<String> list) {
 		File file = new File(projectFolder + File.separatorChar + folder
@@ -98,20 +109,22 @@ public class Project {
 		System.err.println("Could not open file " + file.getAbsolutePath());
 		return null;
 	}
-	
-	public boolean removeSourceFile(String fileName){
-		File file = new File(projectFolder+File.separatorChar+"source"+File.separatorChar+fileName);
-		if (file.exists() && !file.delete()){
+
+	public boolean removeSourceFile(String fileName) {
+		File file = new File(projectFolder + File.separatorChar + "source"
+				+ File.separatorChar + fileName);
+		if (file.exists() && !file.delete()) {
 			return false;
 		}
 		boolean ret = sourceFiles.remove(fileName);
 		updateTree();
 		return ret;
 	}
-	
-	public boolean removeConstaintFile(String fileName){
-		File file = new File(projectFolder+File.separatorChar+"constraint"+File.separatorChar+fileName);
-		if (file.exists() && !file.delete()){
+
+	public boolean removeConstaintFile(String fileName) {
+		File file = new File(projectFolder + File.separatorChar + "constraint"
+				+ File.separatorChar + fileName);
+		if (file.exists() && !file.delete()) {
 			return false;
 		}
 		boolean ret = ucfFiles.remove(fileName);
@@ -126,12 +139,12 @@ public class Project {
 	public String addConstraintFile(String fileName) {
 		return addFile(fileName, "constraint", ucfFiles);
 	}
-	
-	public String getSourceFolder(){
+
+	public String getSourceFolder() {
 		return projectFolder + File.separatorChar + "source";
 	}
-	
-	public String getConstraintFolder(){
+
+	public String getConstraintFolder() {
 		return projectFolder + File.separatorChar + "constraint";
 	}
 
@@ -150,29 +163,33 @@ public class Project {
 		}
 		return false;
 	}
-	
-	public String getTop(){
+
+	public String getTop() {
 		return topSource;
 	}
-	
-	public ArrayList<String> getSourceFiles(){
+
+	public ArrayList<String> getSourceFiles() {
 		return sourceFiles;
 	}
-	
-	public ArrayList<String> getConstraintFiles(){
+
+	public ArrayList<String> getConstraintFiles() {
 		return ucfFiles;
 	}
 
-	public String getProjectName(){
+	public String getProjectName() {
 		return projectName;
 	}
-	
-	public String getBoardType(){
+
+	public String getBoardType() {
 		return boardType;
 	}
-	
+
 	public void setProjectName(String name) {
 		projectName = name;
+	}
+
+	public String getProjectFile() {
+		return projectFolder + File.separatorChar + projectFile;
 	}
 
 	public void setBoardType(String type) {

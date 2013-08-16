@@ -12,16 +12,19 @@ import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.ArmEvent;
-import org.eclipse.swt.events.ArmListener;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -40,13 +43,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Label;
 
 public class MainWindow implements Callback {
-	private static final String VERSION = "0.0.0 Development";
+	private static final String VERSION = "0.0.1 Pre-Alpha Preview";
 
 	protected final Display display = Display.getDefault();
 	protected Shell shlMojoLoader;
@@ -64,6 +63,7 @@ public class MainWindow implements Callback {
 	private ArrayList<StyledCodeEditor> editors;
 	private StyledText console;
 	private ProjectBuilder projectBuilder;
+	private MojoLoader loader;
 
 	// private MojoLoader loader;
 
@@ -121,7 +121,7 @@ public class MainWindow implements Callback {
 				return true;
 			}
 
-			MojoLoader loader = new MojoLoader(null, null, null, true);
+			MojoLoader loader = new MojoLoader(null, null);
 			loader.sendBin(port, binFile, flash, verify);
 			return true;
 		}
@@ -150,6 +150,7 @@ public class MainWindow implements Callback {
 			i.dispose();
 		if (ports.size() != 0) {
 			Object[] array = ports.toArray();
+			String selectedPort = Settings.settings.get(Settings.MOJO_PORT, "");
 
 			for (int i = 0; i < array.length; i++) {
 				MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
@@ -166,6 +167,8 @@ public class MainWindow implements Callback {
 								((MenuItem) event.widget).getText());
 					}
 				});
+				if (menuItem.getText().equals(selectedPort))
+					menuItem.setSelection(true);
 			}
 		} else {
 			MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
@@ -173,9 +176,9 @@ public class MainWindow implements Callback {
 		}
 	}
 
-	private boolean saveAll() {
+	private boolean saveAll(boolean ask) {
 		for (StyledCodeEditor editor : editors) {
-			switch (saveEditor(editor)) {
+			switch (saveEditor(editor, ask)) {
 			case SWT.YES:
 			case SWT.NO:
 				continue;
@@ -187,15 +190,18 @@ public class MainWindow implements Callback {
 		return true;
 	}
 
-	private int saveEditor(StyledCodeEditor editor) {
+	private int saveEditor(StyledCodeEditor editor, boolean ask) {
 		if (editor.isModifed()) {
-			MessageBox dialog = new MessageBox(shlMojoLoader, SWT.ICON_QUESTION
-					| SWT.YES | SWT.NO | SWT.CANCEL);
-			dialog.setText(editor.getFileName() + " has been modified");
-			dialog.setMessage("Do you want to save the changes to "
-					+ editor.getFileName() + "?");
+			int returnCode = SWT.YES;
+			if (ask) {
+				MessageBox dialog = new MessageBox(shlMojoLoader,
+						SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
+				dialog.setText(editor.getFileName() + " has been modified");
+				dialog.setMessage("Do you want to save the changes to "
+						+ editor.getFileName() + "?");
 
-			int returnCode = dialog.open();
+				returnCode = dialog.open();
+			}
 
 			switch (returnCode) {
 			case SWT.YES:
@@ -215,7 +221,7 @@ public class MainWindow implements Callback {
 	}
 
 	private boolean closeEditor(StyledCodeEditor editor) {
-		switch (saveEditor(editor)) {
+		switch (saveEditor(editor, true)) {
 		case SWT.YES:
 		case SWT.NO:
 			editors.remove(editor);
@@ -225,6 +231,50 @@ public class MainWindow implements Callback {
 			return false;
 		}
 		return false;
+	}
+
+	private void updatePlanAheadLocation() {
+		FileDialog dialog = new FileDialog(shlMojoLoader, SWT.OPEN);
+		String result = dialog.open();
+		if (result != null) {
+			Settings.settings.put(Settings.PLANAHEAD_LOC, result);
+		}
+	}
+
+	private void saveSettings() {
+		try {
+			Rectangle r = shlMojoLoader.getBounds();
+			boolean max = shlMojoLoader.getMaximized();
+			Settings.settings.putBoolean(Settings.MAXIMIZED, max);
+			if (!max) {
+				Settings.settings.putInt(Settings.WINDOW_HEIGHT, r.height);
+				Settings.settings.putInt(Settings.WINDOW_WIDTH, r.width);
+			}
+			int[] weights = sideSashForm.getWeights();
+			Settings.settings.putInt(
+					Settings.FILE_LIST_WIDTH,
+					leftWidth = (int) Math.round((double) sideSashForm
+							.getClientArea().width
+							* (double) weights[0]
+							/ (double) (weights[0] + weights[1])));
+			weights = bottomSashForm.getWeights();
+			Settings.settings.putInt(
+					Settings.CONSOLE_HEIGHT,
+					bottomHeight = (int) Math.round((double) bottomSashForm
+							.getClientArea().height
+							* (double) weights[1]
+							/ (double) (weights[0] + weights[1])));
+
+			if (project.isOpen())
+				Settings.settings.put(Settings.OPEN_PROJECT,
+						project.getProjectFile());
+			else
+				Settings.settings.remove(Settings.OPEN_PROJECT);
+
+			Settings.settings.flush();
+		} catch (BackingStoreException e1) {
+			System.err.println("Failed to save settings! " + e1.getMessage());
+		}
 	}
 
 	/**
@@ -240,41 +290,13 @@ public class MainWindow implements Callback {
 		shlMojoLoader.addShellListener(new ShellAdapter() {
 			@Override
 			public void shellClosed(ShellEvent e) {
-				if (!saveAll()) {
+				if (!saveAll(true)) {
 					e.doit = false;
 					return;
 				}
 
+				saveSettings();
 				shlMojoLoader.getImage().dispose();
-				try {
-					Rectangle r = shlMojoLoader.getBounds();
-					boolean max = shlMojoLoader.getMaximized();
-					Settings.settings.putBoolean(Settings.MAXIMIZED, max);
-					if (!max) {
-						Settings.settings.putInt(Settings.WINDOW_HEIGHT,
-								r.height);
-						Settings.settings
-								.putInt(Settings.WINDOW_WIDTH, r.width);
-					}
-					int[] weights = sideSashForm.getWeights();
-					Settings.settings.putInt(
-							Settings.FILE_LIST_WIDTH,
-							leftWidth = (int) Math.round((double) sideSashForm
-									.getClientArea().width
-									* (double) weights[0]
-									/ (double) (weights[0] + weights[1])));
-					weights = bottomSashForm.getWeights();
-					Settings.settings
-							.putInt(Settings.CONSOLE_HEIGHT,
-									bottomHeight = (int) Math.round((double) bottomSashForm
-											.getClientArea().height
-											* (double) weights[1]
-											/ (double) (weights[0] + weights[1])));
-					Settings.settings.flush();
-				} catch (BackingStoreException e1) {
-					System.err.println("Failed to save settings! "
-							+ e1.getMessage());
-				}
 				Theme.dispose();
 			}
 		});
@@ -384,18 +406,36 @@ public class MainWindow implements Callback {
 		mntmSettings.setMenu(menu_2);
 
 		final MenuItem mntmSerialPort_1 = new MenuItem(menu_2, SWT.CASCADE);
-		mntmSerialPort_1.addArmListener(new ArmListener() {
-			public void widgetArmed(ArmEvent arg0) {
-				updatePorts(mntmSerialPort_1);
+		mntmSerialPort_1.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				System.out.println("Selected " + e.text);
 			}
 		});
+
 		mntmSerialPort_1.setText("Serial Port");
 
 		Menu menu_3 = new Menu(mntmSerialPort_1);
 		mntmSerialPort_1.setMenu(menu_3);
+		menu_3.addListener(SWT.Show, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				updatePorts(mntmSerialPort_1);
+			}
+		});
 
 		MenuItem mntmNoSerialPorts = new MenuItem(menu_3, SWT.RADIO);
 		mntmNoSerialPorts.setText("No Serial Ports!");
+
+		MenuItem mntmPlanaheadLocation = new MenuItem(menu_2, SWT.NONE);
+		mntmPlanaheadLocation.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updatePlanAheadLocation();
+			}
+		});
+		mntmPlanaheadLocation.setText("PlanAhead Location");
 
 		Composite composite = new Composite(shlMojoLoader, SWT.NONE);
 		composite.setBackground(Theme.windowBackgroundColor);
@@ -450,9 +490,27 @@ public class MainWindow implements Callback {
 		buildbtn.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				if (projectBuilder.isBuilding()){
+				if (!project.isOpen()) {
+					showError("A project must be opened before you can build it!");
+					return;
+				}
+				if (projectBuilder.isBuilding()) {
 					showError("Your project is already building!");
 					return;
+				}
+				if (loader.isLoading()) {
+					showError("You can't build your project while the Mojo is being programmed!");
+					return;
+				}
+				if (!saveAll(false)) {
+					showError("Could not save all open tabs before build!");
+					MessageBox box = new MessageBox(shlMojoLoader, SWT.YES
+							| SWT.NO);
+					box.setMessage("Continue with the build anyway?");
+					box.setText("All files not saved...");
+					if (box.open() != SWT.YES) {
+						return;
+					}
 				}
 				projectBuilder.buildProject(project);
 			}
@@ -464,11 +522,33 @@ public class MainWindow implements Callback {
 		loadbtn.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				// TODO: Load event
+				if (!project.isOpen()) {
+					showError("A project must be opened before you can load it!");
+					return;
+				}
+				if (projectBuilder.isBuilding()) {
+					showError("You must wait for your design to finish building before loading it.");
+					return;
+				}
+				if (loader.isLoading()) {
+					showError("The Mojo is already being programmed!");
+					return;
+				}
+				String binFile = project.getBinFile();
+				if (binFile == null) {
+					showError("Could not find the bin file! Make sure the project is built.");
+					return;
+				}
+				String port = Settings.settings.get(Settings.MOJO_PORT, null);
+				if (port == null) {
+					showError("You need to select the serial port the Mojo is connected to in the settings menu.");
+					return;
+				}
+				loader.sendBin(port, binFile, true, true);
 			}
 		});
 
-		project = new Project(shlMojoLoader);
+		
 
 		bottomSashForm = new SashForm(shlMojoLoader, SWT.VERTICAL);
 		bottomSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
@@ -634,18 +714,22 @@ public class MainWindow implements Callback {
 
 		treeMenu = new Menu(shlMojoLoader, SWT.POP_UP);
 		tree.setMenu(treeMenu);
+		
+		project = new Project(shlMojoLoader);
 		project.setTree(tree);
+		String oldProject = Settings.settings.get(Settings.OPEN_PROJECT, null);
+		if (oldProject != null)
+			try {
+				project.openXML(oldProject);
+				project.updateTree();
+			} catch (ParseException | IOException e1) {
+				System.err.println("Error: could not open old project file " + oldProject);
+			}
 
 		tabFolder = new CTabFolder(sideSashForm, SWT.NULL);
 		tabFolder.setSimple(false);
 		tabFolder.setDragDetect(true);
-		// DragNDropListener dndListner = new DragNDropListener(tabFolder,
-		// display);
-		// tabFolder.addListener(SWT.DragDetect, dndListner);
-		// tabFolder.addListener(SWT.MouseUp, dndListner);
-		// tabFolder.addListener(SWT.MouseMove, dndListner);
-		// tabFolder.addListener(SWT.MouseExit, dndListner);
-		// tabFolder.addListener(SWT.MouseEnter, dndListner);
+
 		tabFolder.addCTabFolder2Listener(new CTabFolder2Adapter() {
 			@Override
 			public void close(CTabFolderEvent event) {
@@ -666,14 +750,22 @@ public class MainWindow implements Callback {
 		console.setBackground(Theme.consoleBackgroundColor);
 		console.setForeground(Theme.consoleForgoundColor);
 		console.setAlwaysShowScrollBars(false);
+		console.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				console.setTopIndex(console.getLineCount() - 1);
+			}
+		});
+		console.setFont(new Font(display, "Monospace", 10, SWT.NORMAL));
 		bottomSashForm.setWeights(new int[] { 8, 2 });
 
 		openFile(null);
 
 		leftWidth = Settings.settings.getInt(Settings.FILE_LIST_WIDTH, 200);
 		bottomHeight = Settings.settings.getInt(Settings.CONSOLE_HEIGHT, 200);
-		
+
 		projectBuilder = new ProjectBuilder(display, shlMojoLoader, console);
+		loader = new MojoLoader(display, console);
 	}
 
 	private void showError(String error) {

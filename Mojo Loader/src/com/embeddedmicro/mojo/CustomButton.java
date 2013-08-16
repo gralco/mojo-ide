@@ -23,8 +23,10 @@ public class CustomButton extends Canvas {
 	public CustomButton(Composite parent, int style) {
 		super(parent, style);
 
-		setBackground(Theme.windowBackgroundColor);
-		setForeground(Theme.windowForgroundColor);
+		if (Theme.set) {
+			setBackground(Theme.windowBackgroundColor);
+			setForeground(Theme.windowForgroundColor);
+		}
 
 		this.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
@@ -59,7 +61,7 @@ public class CustomButton extends Canvas {
 				CustomButton.this.keyPressed(e);
 			}
 		});
-		
+
 	}
 
 	public void setIcon(Image icon) {
@@ -69,15 +71,18 @@ public class CustomButton extends Canvas {
 	private void paintControl(PaintEvent e) {
 		switch (mouse) {
 		case 0:
-			e.gc.setBackground(Theme.windowBackgroundColor);
+			if (Theme.set)
+				e.gc.setBackground(Theme.windowBackgroundColor);
 			e.gc.fillRectangle(getClientArea());
 			break;
 		case 1:
-			e.gc.setBackground(Theme.toolBarHoverColor);
+			if (Theme.set)
+				e.gc.setBackground(Theme.toolBarHoverColor);
 			e.gc.fillRectangle(getClientArea());
 			break;
 		case 2:
-			e.gc.setBackground(Theme.toolBarClickColor);
+			if (Theme.set)
+				e.gc.setBackground(Theme.toolBarClickColor);
 			e.gc.fillRectangle(getClientArea());
 			break;
 		}

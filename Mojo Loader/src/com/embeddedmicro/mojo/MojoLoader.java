@@ -14,23 +14,25 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Display;
 
 public class MojoLoader {
 	private Display display;
-	private TextProgressBar bar;
 	private InputStream in;
 	private OutputStream out;
 	private SerialPort serialPort;
-	private Callback callback;
-	private boolean terminal;
+	private StyledText console;
+	private Thread thread;
 
-	public MojoLoader(Display display, TextProgressBar bar, Callback callback,
-			boolean terminal) {
+	public MojoLoader(Display display, StyledText console) {
 		this.display = display;
-		this.bar = bar;
-		this.callback = callback;
-		this.terminal = terminal;
+		this.console = console;
+	}
+
+	public boolean isLoading() {
+		return thread != null && thread.isAlive();
 	}
 
 	public static ArrayList<String> listPorts() {
@@ -47,33 +49,65 @@ public class MojoLoader {
 		return ports;
 	}
 
-	private void updateProgress(final float value) {
-		if (!terminal) {
-			display.asyncExec(new Runnable() {
-				public void run() {
-					if (bar.isDisposed())
-						return;
-					bar.setSelection((int) (value * 100.0f));
+	private void updateProgress(final int percent) {
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				int lastLine = console.getLineCount() - 1;
+				int lineOffset = console.getOffsetAtLine(lastLine);
+				int lastOffset = console.getCharCount() - 1;
+				if (lastOffset < lineOffset)
+					lastOffset = lineOffset;
+
+				StringBuilder bar = new StringBuilder("[");
+
+				for (int i = 0; i < 50; i++) {
+					if (i < (percent / 2)) {
+						bar.append("=");
+					} else if (i == (percent / 2)) {
+						bar.append(">");
+					} else {
+						bar.append(" ");
+					}
 				}
-			});
-		} else {
-			System.out.print("\r\33[20C"
-					+ String.format("%-4s", (int) (value * 100.0f) + "%"));
-		}
+
+				bar.append("]   " + percent + "%     ");
+
+				console.replaceTextRange(lineOffset, lastOffset - lineOffset,
+						bar.toString());
+			}
+		});
 	}
 
-	private void updateText(final String text) {
-		if (!terminal) {
-			display.asyncExec(new Runnable() {
-				public void run() {
-					if (bar.isDisposed())
-						return;
-					bar.setText(text);
+	private void clearConsole() {
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				console.setText("");
+			}
+		});
+	}
+
+	private void printText(final String text) {
+		printText(text, false);
+	}
+
+	private void printText(final String text, final boolean red) {
+		display.asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				String line = text + System.lineSeparator();
+				console.append(line);
+				if (red) {
+					int end = console.getCharCount();
+					StyleRange styleRange = new StyleRange();
+					styleRange.start = end - line.length();
+					styleRange.length = line.length();
+					styleRange.foreground = Theme.errorTextColor;
+					console.setStyleRange(styleRange);
 				}
-			});
-		} else {
-			System.out.print("\n" + String.format("%-20s", text));
-		}
+			}
+		});
 	}
 
 	private int read(int timeout) throws IOException, TimeoutException {
@@ -105,10 +139,10 @@ public class MojoLoader {
 	}
 
 	public void clearFlash(final String port) {
-		new Thread() {
+		thread = new Thread() {
 			public void run() {
-				updateText("Connecting...");
-				updateProgress(0.0f);
+				clearConsole();
+				printText("Connecting...");
 				try {
 					connect(port);
 				} catch (Exception e) {
@@ -124,7 +158,7 @@ public class MojoLoader {
 				}
 
 				try {
-					updateText("Erasing...");
+					printText("Erasing...");
 
 					while (in.available() > 0)
 						in.skip(in.available()); // Flush the buffer
@@ -136,8 +170,7 @@ public class MojoLoader {
 						return;
 					}
 
-					updateText("Done");
-					updateProgress(1.0f);
+					printText("Done");
 
 				} catch (IOException | TimeoutException e) {
 					onError(e.getMessage());
@@ -153,19 +186,18 @@ public class MojoLoader {
 				}
 
 				serialPort.close();
-				if (callback != null)
-					callback.onSuccess();
 			}
-		}.start();
+		};
+		thread.start();
 	}
 
 	public void sendBin(final String port, final String binFile,
 			final boolean flash, final boolean verify) {
-		new Thread() {
+		thread = new Thread() {
 			public void run() {
-				updateText("Connecting...");
-				if (!terminal)
-					updateProgress(0.0f);
+				clearConsole();
+				printText("Connecting...");
+
 				try {
 					connect(port);
 				} catch (Exception e) {
@@ -198,7 +230,7 @@ public class MojoLoader {
 					while (in.available() > 0)
 						in.skip(in.available()); // Flush the buffer
 
-					updateText("Loading...");
+					printText("Loading...");
 
 					if (flash) {
 						if (verify)
@@ -231,8 +263,6 @@ public class MojoLoader {
 						return;
 					}
 
-					updateProgress(1.0f);
-
 					int num;
 					int count = 0;
 					int oldCount = 0;
@@ -250,9 +280,12 @@ public class MojoLoader {
 						if (count - oldCount > percent) {
 							oldCount = count;
 							float prog = (float) count / length;
-							updateProgress(prog);
+							updateProgress(Math.round(prog * 100.0f));
 						}
 					}
+
+					updateProgress(100);
+					printText("");
 
 					if (read(1000) != 'D') {
 						onError("Mojo did not acknowledge the transfer!");
@@ -263,7 +296,7 @@ public class MojoLoader {
 					bin.close();
 
 					if (flash && verify) {
-						updateText("Verifying...");
+						printText("Verifying...");
 						bin = new BufferedInputStream(new FileInputStream(file));
 						out.write('S');
 
@@ -304,9 +337,11 @@ public class MojoLoader {
 							if (count - oldCount > percent) {
 								oldCount = count;
 								float prog = (float) count / length;
-								updateProgress(prog);
+								updateProgress(Math.round(prog * 100.0f));
 							}
 						}
+						updateProgress(100);
+						printText("");
 					}
 
 					if (flash) {
@@ -324,8 +359,7 @@ public class MojoLoader {
 					return;
 				}
 
-				updateProgress(1.0f);
-				updateText("Done");
+				printText("Done");
 
 				try {
 					in.close();
@@ -336,21 +370,16 @@ public class MojoLoader {
 				}
 
 				serialPort.close();
-				if (callback != null)
-					callback.onSuccess();
-				if (terminal)
-					System.out.print("\n");
 			}
-		}.start();
+		};
+		thread.start();
 	}
 
 	private void onError(String e) {
 		if (e == null)
 			e = "";
-		if (callback != null)
-			callback.onError(e);
-		updateProgress(0.0f);
-		updateText("");
+
+		printText("Error: " + e, true);
 		try {
 			if (in != null)
 				in.close();
