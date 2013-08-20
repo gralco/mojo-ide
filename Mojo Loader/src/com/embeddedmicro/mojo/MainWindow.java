@@ -241,6 +241,22 @@ public class MainWindow implements Callback {
 		}
 	}
 
+	private void loadFonts() {
+		int fontsLoaded = 0;
+		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-R.ttf") ? fontsLoaded + 1
+				: fontsLoaded;
+		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-RI.ttf") ? fontsLoaded + 1
+				: fontsLoaded;
+		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-B.ttf") ? fontsLoaded + 1
+				: fontsLoaded;
+		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-BI.ttf") ? fontsLoaded + 1
+				: fontsLoaded;
+		if (fontsLoaded != 4) {
+			showError("Could not load the fonts! Only " + fontsLoaded
+					+ " out of 4 fonts were loaded.");
+		}
+	}
+
 	private void saveSettings() {
 		try {
 			Rectangle r = shlMojoLoader.getBounds();
@@ -283,6 +299,7 @@ public class MainWindow implements Callback {
 	 * @wbp.parser.entryPoint
 	 */
 	protected void createContents() {
+		loadFonts();
 		Theme.initColors(display);
 		Images.loadImages(display);
 		editors = new ArrayList<StyledCodeEditor>();
@@ -548,8 +565,6 @@ public class MainWindow implements Callback {
 			}
 		});
 
-		
-
 		bottomSashForm = new SashForm(shlMojoLoader, SWT.VERTICAL);
 		bottomSashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
 				true, 1, 1));
@@ -679,6 +694,7 @@ public class MainWindow implements Callback {
 						gc.setBackground(Theme.treeSelectedFocusedColor);
 					else
 						gc.setBackground(Theme.treeSelectedColor);
+					gc.setForeground(Theme.editorForegroundColor);
 					gc.fillRectangle(rect);
 					// restore colors for subsequent drawing
 					gc.setForeground(foreground);
@@ -714,7 +730,7 @@ public class MainWindow implements Callback {
 
 		treeMenu = new Menu(shlMojoLoader, SWT.POP_UP);
 		tree.setMenu(treeMenu);
-		
+
 		project = new Project(shlMojoLoader);
 		project.setTree(tree);
 		String oldProject = Settings.settings.get(Settings.OPEN_PROJECT, null);
@@ -723,7 +739,8 @@ public class MainWindow implements Callback {
 				project.openXML(oldProject);
 				project.updateTree();
 			} catch (ParseException | IOException e1) {
-				System.err.println("Error: could not open old project file " + oldProject);
+				System.err.println("Error: could not open old project file "
+						+ oldProject);
 			}
 
 		tabFolder = new CTabFolder(sideSashForm, SWT.NULL);
@@ -756,7 +773,7 @@ public class MainWindow implements Callback {
 				console.setTopIndex(console.getLineCount() - 1);
 			}
 		});
-		console.setFont(new Font(display, "Monospace", 10, SWT.NORMAL));
+		console.setFont(new Font(display, "Ubuntu Mono", 12, SWT.NORMAL));
 		bottomSashForm.setWeights(new int[] { 8, 2 });
 
 		openFile(null);

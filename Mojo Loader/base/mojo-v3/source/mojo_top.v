@@ -2,7 +2,7 @@ module mojo_top(
 		input clk,
 		input rst_n,
 		input cclk,
-		output[7:0]led,
+		output [7:0] led,
 		output spi_miso,
 		input spi_ss,
 		input spi_mosi,

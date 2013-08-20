@@ -51,7 +51,7 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		addLineBackgroundListener(new LineBackground());
 		setTabs(2);
 
-		setFont(new Font(getDisplay(), "Monospace", 10, SWT.NORMAL));
+		setFont(new Font(getDisplay(), "Ubuntu Mono", 12, SWT.NORMAL));
 
 		tabItem = new CTabItem(tabFolder, SWT.CLOSE);
 

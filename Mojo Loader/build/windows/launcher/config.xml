@@ -1,8 +1,8 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>lib/mojo-loader.jar</jar>
-  <outfile>mojo-loader.exe</outfile>
+  <jar>lib/mojo-ide.jar</jar>
+  <outfile>mojo-ide.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -18,6 +18,8 @@
     <cp>.</cp>
     <cp>./swt.jar</cp>
     <cp>./RXTXcomm.jar</cp>
+    <cp>./jdom-2.0.5.jar</cp>
+    <cp>./commons-io-2.4.jar</cp>
   </classPath>
   <jre>
     <path>java</path>

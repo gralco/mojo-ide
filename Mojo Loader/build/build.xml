@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="Mojo Loader" default="build">
+<project name="Mojo IDE" default="build">
   <!--echo message="os.name = ${os.name}" /-->
   <!--echo message="os.arch = ${os.arch}" /-->
   <!--echo message="os.version = ${os.version}" /-->
@@ -20,20 +20,22 @@
   <condition property="platform" 
 	     value="linux64"><os family="unix" arch="amd64" /></condition>
 
-  <!-- Libraries required for running mojo loader -->
+  <!-- Libraries required for running mojo IDE -->
   <fileset dir="." id="runtime.jars">
-    <include name="shared/mojo-loader.jar" />
+    <include name="shared/mojo-ide.jar" />
     <include name="shared/RXTXcomm.jar" />
+    <include name="shared/commons-io-2.4.jar" />
+    <include name="shared/jdom-2.0.5.jar" />
   </fileset>
 
-  <target name="build" description="Build Mojo Loader.">
+  <target name="build" description="Build Mojo IDE.">
     <antcall target="windows-build" />
     <antcall target="linux32-build" />
     <antcall target="linux64-build" />
   </target>
 
   <target name="dist" 
-	  description="Build Mojo Loader for distribution.">
+	  description="Build Mojo IDE for distribution.">
     <input message="Enter version number:" 
 	   addproperty="version"
 	   defaultvalue="1.0.0" />
@@ -61,32 +63,24 @@
   <target name="assemble">
     <fail unless="target.path" 
 	  message="Do not call assemble from the command line." />
-    
-    <!-- copy shared tools folder -->
-    <copy todir="${target.path}/tools">
-      <fileset dir="shared/tools" />
+
+	<copy todir="${target.path}">
+      <fileset file="shared/revisions.txt" />
+    </copy>
+
+    <copy todir="${target.path}">
+      <fileset file="shared/icon.png" />
     </copy>
     
-    <!-- copy library folder -->
-    <copy todir="${target.path}/libraries">
-      <fileset dir="../libraries" />
+    <!-- copy shared base projects folder -->
+    <copy todir="${target.path}/base">
+      <fileset dir="shared/base" />
     </copy>
     
-    <!-- copy hardware folder -->
-    <copy todir="${target.path}/hardware">
-      <fileset dir="../hardware" />
+    <!-- copy res folder -->
+    <copy todir="${target.path}/res">
+      <fileset dir="../res" />
     </copy>
-    
-    <!-- copy shared examples folder -->
-    <copy todir="${target.path}/examples">
-      <fileset dir="shared/examples" />
-    </copy>
-    
-    <!-- Unzip documentation -->
-    <unzip dest="${target.path}" src="shared/reference.zip" overwrite="false"/>
-    
-    <!-- Write the revision file! -->
-    <echo file="${target.path}/lib/version.txt" message="${version}" />
   </target>
 
   <!-- - - - - - - - - - - - - - - - - - -->
@@ -114,10 +108,6 @@
     <fail unless="target.os" 
 	  message="Do not call linux-build from the command line." />
     <mkdir dir="work/${target.os}" />
-    
-    <copy todir="work/${target.os}">
-      <fileset file="shared/revisions.txt" />
-    </copy>
 
     <copy todir="work/${target.os}/lib" flatten="true">
       <fileset refid="runtime.jars" />
@@ -131,8 +121,12 @@
       <fileset file="lib/${target.os}/swt.jar" />
     </copy>
 
-    <copy todir="work/${target.os}" file="linux/launcher/mojo-loader" />
-    <chmod perm="755" file="work/${target.os}/mojo-loader" />
+    <copy todir="work/${target.os}" file="linux/launcher/mojo-ide" />
+    <chmod perm="755" file="work/${target.os}/mojo-ide" />
+
+    <antcall target="assemble">
+      <param name="target.path" value="work/${target.os}" />
+    </antcall> 
 
   </target>
 
@@ -151,23 +145,23 @@
 <target name="linux-dist" depends="build" 
 	  description="Build .tar.gz of linux version">
 
-    <move file="work/${target.os}" tofile="work/mojo-loader-${version}" />
+    <move file="work/${target.os}" tofile="work/mojo-ide-${version}" />
 
     <exec executable="tar" dir="work">
       <arg value="-z"/>
       <arg value="-c"/>
       <arg value="-f"/>
-      <arg value="mojo-loader-${version}-${target.os}.tgz"/>
-      <arg value="mojo-loader-${version}"/>
+      <arg value="mojo-ide-${version}-${target.os}.tgz"/>
+      <arg value="mojo-ide-${version}"/>
     </exec>
 
-    <move file="work/mojo-loader-${version}" tofile="work/${target.os}" />
+    <move file="work/mojo-ide-${version}" tofile="work/${target.os}" />
 
     <echo>
       =======================================================
-      Mojo Loader for Linux was built. Grab the archive from   
+      Mojo IDE for Linux was built. Grab the archive from   
       
-      build/linux/mojo-loader-${version}-${target.os}.tgz
+      build/linux/mojo-ide-${version}-${target.os}.tgz
       =======================================================
     </echo>
 </target>
@@ -213,9 +207,9 @@
   	      <fileset dir="windows" includes="MojoDriver.inf" />
   	</copy>
 
-   <!-- <antcall target="assemble">
-      <param name="target.path" value="windows/work" />
-    </antcall> -->
+    <antcall target="assemble">
+      <param name="target.path" value="work/windows" />
+    </antcall> 
 
     <property name="launch4j.dir" location="/opt/launch4j" />
     <taskdef name="launch4j"
@@ -243,21 +237,21 @@
 <target name="windows-dist" depends="build" 
 	  description="Build .zip of windows version">
 
-    <move file="work/windows" tofile="work/mojo-loader-${version}" />
+    <move file="work/windows" tofile="work/mojo-ide-${version}" />
 
     <exec executable="zip" dir="work">
       <arg value="-r" />
-      <arg value="mojo-loader-${version}-windows.zip"/>
-      <arg value="mojo-loader-${version}"/>
+      <arg value="mojo-ide-${version}-windows.zip"/>
+      <arg value="mojo-ide-${version}"/>
     </exec>
 
-    <move file="work/mojo-loader-${version}" tofile="work/windows" />
+    <move file="work/mojo-ide-${version}" tofile="work/windows" />
 
     <echo>
       =======================================================
-      Mojo Loader for Windows was built. Grab the archive from   
+      Mojo IDE for Windows was built. Grab the archive from   
       
-      build/linux/mojo-loader-${version}-windows.zip
+      build/linux/mojo-ide-${version}-windows.zip
       =======================================================
     </echo>
 </target>

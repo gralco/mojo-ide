@@ -13,7 +13,6 @@
 			<attribute name="javadoc_location" value="http://www.jdom.org/docs/apidocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/swing2swt.jar"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.4.jar" sourcepath="doc/commons-io-2.4-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/Mojo Loader/doc/commons-io-2.4-javadoc.jar!/"/>
