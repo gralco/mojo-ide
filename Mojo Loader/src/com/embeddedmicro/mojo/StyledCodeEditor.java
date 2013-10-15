@@ -68,6 +68,8 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		addVerifyListener(formatter);
 		addModifyListener(formatter);
 		
+		addModifyListener(new AntlrParser(this));
+		
 		opened = openFile(file);
 
 		addModifyListener(this);

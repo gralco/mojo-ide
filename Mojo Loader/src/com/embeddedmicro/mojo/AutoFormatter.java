@@ -193,7 +193,10 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		int indent = 0;
 		for (IndentPair pair : indentPairs) {
 			if (indentPairConatins(pair, line))
-				indent += pair.tag.tabs;
+				if (pair.tag != null)
+					indent += pair.tag.tabs;
+				else
+					indent++;
 		}
 		return indent;
 	}
@@ -341,6 +344,8 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 		else
 			for (IndentPair pair : indentPairs) {
 				int offset;
+				if (pair.tag == null)
+					continue;
 				if (pair.tag.endNextLine) {
 					offset = editor.getOffsetAtLine(editor
 							.getLineAtOffset(match.offset) + 1);
@@ -385,12 +390,13 @@ public class AutoFormatter implements VerifyListener, ModifyListener {
 
 				ArrayList<IndentMatch> matches = getIndentMatches(indentTags,
 						line.toString(), lineNum, false, true);
-				int tabs = matches.size();
+				int tabs = -matches.size(); // get the tabs to remove
 
 				if (lineNum > 0) {
 					String prevLine = editor.getLine(lineNum - 1);
-					tabs += countIndents(prevLine)
+					tabs += countIndents(prevLine) // tabs from previous line
 							+ countIndents(removePairs(getIndentMatches(
+									// tabs from previous line to add
 									indentTags, prevLine, lineNum - 1, true,
 									true)));
 				}

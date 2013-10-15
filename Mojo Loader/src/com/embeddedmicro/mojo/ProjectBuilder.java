@@ -171,7 +171,7 @@ public class ProjectBuilder {
 	private String getSpacedList(ArrayList<String> list, String prefix) {
 		StringBuilder builder = new StringBuilder();
 		for (String s : list) {
-			builder.append(prefix).append(s).append(" ");
+			builder.append("\"").append(prefix).append(s).append("\" ");
 		}
 		builder.deleteCharAt(builder.length() - 1);
 		return builder.toString();
@@ -179,27 +179,30 @@ public class ProjectBuilder {
 
 	private void generateProjectFile(BufferedWriter file) throws IOException {
 		final String nl = System.lineSeparator();
-		file.write("set projDir " + workFolder + File.separatorChar
-				+ projectDir + nl);
+		// final String ps = File.separator;
+		final String ps = "/"; // the tcl script expects / for all OS's
+		file.write("set projDir \"" + workFolder.replace("\\", "/") + ps
+				+ projectDir + "\"" + nl);
 		file.write("set projName " + project.getProjectName() + nl);
 		file.write("set topName top" + nl);
 		file.write("set device "
 				+ Boards.getByName(project.getBoardType()).getFPGAName() + nl);
-		file.write("if {[file exists $projDir/$projName]} { file delete -force $projDir/$projName }"
-				+ nl);
-		file.write("create_project $projName $projDir/$projName -part $device"
-				+ nl);
+		file.write("if {[file exists \"$projDir" + ps
+				+ "$projName\"]} { file delete -force \"$projDir" + ps
+				+ "$projName\" }" + nl);
+		file.write("create_project $projName \"$projDir" + ps
+				+ "$projName\" -part $device" + nl);
 		file.write("set_property design_mode RTL [get_filesets sources_1]" + nl);
-		file.write("set verilogSources \""
-				+ getSpacedList(project.getSourceFiles(),
-						project.getSourceFolder() + File.separatorChar) + "\""
-				+ nl);
+		file.write("set verilogSources [list "
+				+ getSpacedList(project.getSourceFiles(), project
+						.getSourceFolder().replace("\\", "/") + ps) + "]" + nl);
 		file.write("import_files -fileset [get_filesets sources_1] -force -norecurse $verilogSources"
 				+ nl);
-		file.write("set ucfSources \""
+		file.write("set ucfSources [list "
 				+ getSpacedList(project.getConstraintFiles(),
-						project.getConstraintFolder() + File.separatorChar)
-				+ "\"" + nl);
+						project.getConstraintFolder().replace("\\", "/")
+								.replace(" ", "\\ ")
+								+ ps) + "]" + nl);
 		file.write("import_files -fileset [get_filesets constrs_1] -force -norecurse $ucfSources"
 				+ nl);
 		file.write("set_property top " + project.getTop().split("\\.")[0]
@@ -215,5 +218,4 @@ public class ProjectBuilder {
 
 		file.close();
 	}
-
 }

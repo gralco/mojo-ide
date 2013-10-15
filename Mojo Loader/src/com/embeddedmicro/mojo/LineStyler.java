@@ -28,7 +28,6 @@ public class LineStyler implements LineStyleListener, ModifyListener {
 
 	public LineStyler(StyledText text) {
 		styledText = text;
-		
 
 		syntaxFormat = new SyntaxFormat(text.getDisplay());
 
@@ -89,7 +88,7 @@ public class LineStyler implements LineStyleListener, ModifyListener {
 
 		while ((start = lineText.indexOf("//", offset)) != -1) {
 			// is the comment in a string?
-			if (strings != null && styleContains(strings, start + lineOffset)) { 
+			if (strings != null && styleContains(strings, start + lineOffset)) {
 				offset = start + 2;
 				continue;
 			}
@@ -99,7 +98,7 @@ public class LineStyler implements LineStyleListener, ModifyListener {
 				continue;
 			}
 			// "*//" is not a comment
-			if (start > 0 && lineText.charAt(start - 1) == '*') { 
+			if (start > 0 && lineText.charAt(start - 1) == '*') {
 				offset = start + 1;
 				continue;
 			}
@@ -226,60 +225,60 @@ public class LineStyler implements LineStyleListener, ModifyListener {
 		}
 		return ignoreList;
 	}
-	
-	private void updateMultiLineComments(String text){
+
+	private void updateMultiLineComments(String text) {
 		// Clear any stored offsets
-				LinkedList<int[]> comments = new LinkedList<int[]>();
+		LinkedList<int[]> comments = new LinkedList<int[]>();
 
-				// Go through all the instances of COMMENT_START
-				for (int pos = text.indexOf(COMMENT_START); pos > -1; pos = text
-						.indexOf(COMMENT_START, pos)) {
+		// Go through all the instances of COMMENT_START
+		for (int pos = text.indexOf(COMMENT_START); pos > -1; pos = text
+				.indexOf(COMMENT_START, pos)) {
 
-					int lineNum = styledText.getLineAtOffset(pos);
-					int offset = styledText.getOffsetAtLine(lineNum);
-					String line = styledText.getLine(lineNum);
+			int lineNum = styledText.getLineAtOffset(pos);
+			int offset = styledText.getOffsetAtLine(lineNum);
+			String line = styledText.getLine(lineNum);
 
-					ArrayList<StyleRange> ignoreList = getIgnoredStyles(line, offset);
+			ArrayList<StyleRange> ignoreList = getIgnoredStyles(line, offset);
 
-					// start marker was in a comment or string skip it
-					if (styleContains(ignoreList, pos)) {
-						pos += 2;
-						continue;
-					}
+			// start marker was in a comment or string skip it
+			if (styleContains(ignoreList, pos)) {
+				pos += 2;
+				continue;
+			}
 
-					// offsets[0] holds the COMMENT_START offset
-					// and COMMENT_END holds the ending offset
-					int[] offsets = new int[2];
-					offsets[0] = pos;
+			// offsets[0] holds the COMMENT_START offset
+			// and COMMENT_END holds the ending offset
+			int[] offsets = new int[2];
+			offsets[0] = pos;
 
-					// Find the corresponding end comment.
-					while ((pos = text.indexOf(COMMENT_END, pos)) != -1) {
-						lineNum = styledText.getLineAtOffset(pos);
-						offset = styledText.getOffsetAtLine(lineNum);
-						line = styledText.getLine(lineNum);
+			// Find the corresponding end comment.
+			while ((pos = text.indexOf(COMMENT_END, pos)) != -1) {
+				lineNum = styledText.getLineAtOffset(pos);
+				offset = styledText.getOffsetAtLine(lineNum);
+				line = styledText.getLine(lineNum);
 
-						ignoreList = getIgnoredStyles(line, offset);
+				ignoreList = getIgnoredStyles(line, offset);
 
-						// check to make sure the marker isn't in a comment or string
-						if (!styleContains(ignoreList, pos)) {
-							break;
-						}
-						pos += 2;
-					}
-
-					// If no corresponding end comment, use the end of the text
-					offsets[1] = pos == -1 ? text.length() - 1 : pos
-							+ COMMENT_END.length() - 1;
-					pos = offsets[1];
-
-					// Add the offsets to the collection
-					comments.add(offsets);
+				// check to make sure the marker isn't in a comment or string
+				if (!styleContains(ignoreList, pos)) {
+					break;
 				}
+				pos += 2;
+			}
 
-				if (!commentsEqual(comments, commentOffsets)) {
-					commentOffsets = comments;
-					styledText.redraw();
-				}
+			// If no corresponding end comment, use the end of the text
+			offsets[1] = pos == -1 ? text.length() - 1 : pos
+					+ COMMENT_END.length() - 1;
+			pos = offsets[1];
+
+			// Add the offsets to the collection
+			comments.add(offsets);
+		}
+
+		if (!commentsEqual(comments, commentOffsets)) {
+			commentOffsets = comments;
+			styledText.redraw();
+		}
 	}
 
 	@Override
