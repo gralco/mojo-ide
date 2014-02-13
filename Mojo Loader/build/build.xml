@@ -26,6 +26,7 @@
     <include name="shared/RXTXcomm.jar" />
     <include name="shared/commons-io-2.4.jar" />
     <include name="shared/jdom-2.0.5.jar" />
+    <include name="shared/antlr-runtime-4.2.jar" />
   </fileset>
 
   <target name="build" description="Build Mojo IDE.">

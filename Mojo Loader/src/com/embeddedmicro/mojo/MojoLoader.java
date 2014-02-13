@@ -130,12 +130,12 @@ public class MojoLoader {
 	}
 
 	private void restartMojo() throws InterruptedException {
-		serialPort.setDTR(true);
-		Thread.sleep(5);
-		serialPort.setDTR(false);
-		Thread.sleep(5);
-		serialPort.setDTR(true);
-		Thread.sleep(5);
+		for (int i = 0; i < 5; i++) {
+			serialPort.setDTR(false);
+			Thread.sleep(5);
+			serialPort.setDTR(true);
+			Thread.sleep(5);
+		}
 	}
 
 	public void clearFlash(final String port) {

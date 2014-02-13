@@ -64,11 +64,8 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 
 		tabItem.setControl(this);
 		
-		formatter = new AutoFormatter(this, styler);
-		addVerifyListener(formatter);
-		addModifyListener(formatter);
-		
-		addModifyListener(new AntlrParser(this));
+		formatter = new AutoFormatter(this);
+		addExtendedModifyListener(formatter);
 		
 		opened = openFile(file);
 

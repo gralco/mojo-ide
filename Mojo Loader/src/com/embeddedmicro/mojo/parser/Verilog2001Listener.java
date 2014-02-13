@@ -1,4 +1,4 @@
-// Generated from Verilog2001.g4 by ANTLR 4.1
+// Generated from Verilog2001.g4 by ANTLR 4.2
 package com.embeddedmicro.mojo.parser;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -73,6 +73,17 @@ public interface Verilog2001Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitTzx_path_delay_expression(@NotNull Verilog2001Parser.Tzx_path_delay_expressionContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link Verilog2001Parser#event_primary}.
+	 * @param ctx the parse tree
+	 */
+	void enterEvent_primary(@NotNull Verilog2001Parser.Event_primaryContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Verilog2001Parser#event_primary}.
+	 * @param ctx the parse tree
+	 */
+	void exitEvent_primary(@NotNull Verilog2001Parser.Event_primaryContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link Verilog2001Parser#input_terminal}.
@@ -3111,17 +3122,6 @@ public interface Verilog2001Listener extends ParseTreeListener {
 	void exitLoop_statement(@NotNull Verilog2001Parser.Loop_statementContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link Verilog2001Parser#task_enable}.
-	 * @param ctx the parse tree
-	 */
-	void enterTask_enable(@NotNull Verilog2001Parser.Task_enableContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link Verilog2001Parser#task_enable}.
-	 * @param ctx the parse tree
-	 */
-	void exitTask_enable(@NotNull Verilog2001Parser.Task_enableContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link Verilog2001Parser#t1z_path_delay_expression}.
 	 * @param ctx the parse tree
 	 */
@@ -3131,6 +3131,17 @@ public interface Verilog2001Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitT1z_path_delay_expression(@NotNull Verilog2001Parser.T1z_path_delay_expressionContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link Verilog2001Parser#task_enable}.
+	 * @param ctx the parse tree
+	 */
+	void enterTask_enable(@NotNull Verilog2001Parser.Task_enableContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Verilog2001Parser#task_enable}.
+	 * @param ctx the parse tree
+	 */
+	void exitTask_enable(@NotNull Verilog2001Parser.Task_enableContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link Verilog2001Parser#event_declaration}.
@@ -3340,6 +3351,17 @@ public interface Verilog2001Listener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitTask_port_type(@NotNull Verilog2001Parser.Task_port_typeContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link Verilog2001Parser#term}.
+	 * @param ctx the parse tree
+	 */
+	void enterTerm(@NotNull Verilog2001Parser.TermContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link Verilog2001Parser#term}.
+	 * @param ctx the parse tree
+	 */
+	void exitTerm(@NotNull Verilog2001Parser.TermContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link Verilog2001Parser#cmos_switch_instance}.
