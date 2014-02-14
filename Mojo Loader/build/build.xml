@@ -122,7 +122,11 @@
       <fileset file="lib/${target.os}/swt.jar" />
     </copy>
 
-    <copy todir="work/${target.os}" file="linux/launcher/mojo-ide" />
+    <copy todir="work/${target.os}">
+      <fileset dir="linux" includes="driver/**" />
+    </copy>
+
+    <copy todir="work/${target.os}" file="linux/mojo-ide" />
     <chmod perm="755" file="work/${target.os}/mojo-ide" />
 
     <antcall target="assemble">
@@ -198,6 +202,10 @@
     
     <copy todir="work/windows">
       <fileset file="lib/windows32/rxtxSerial.dll" />
+    </copy>
+
+    <copy todir="work/windows">
+      <fileset dir="windows" includes="driver/**" />
     </copy>
 
     <copy todir="work/windows">
