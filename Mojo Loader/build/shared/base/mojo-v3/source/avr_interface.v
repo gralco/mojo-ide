@@ -40,40 +40,40 @@ module avr_interface(
 	reg [3:0] sample_channel_d, sample_channel_q;
 	
 	cclk_detector cclk_detector (
-		.clk(clk),
-		.rst(rst),
-		.cclk(cclk),
-		.ready(ready)
+	.clk(clk),
+	.rst(rst),
+	.cclk(cclk),
+	.ready(ready)
 	);
 	
 	spi_slave spi_slave (
-		.clk(clk),
-		.rst(n_rdy),
-		.ss(spi_ss),
-		.mosi(spi_mosi),
-		.miso(spi_miso_m),
-		.sck(spi_sck),
-		.done(spi_done),
-		.din(8'hff),
-		.dout(spi_dout)
+	.clk(clk),
+	.rst(n_rdy),
+	.ss(spi_ss),
+	.mosi(spi_mosi),
+	.miso(spi_miso_m),
+	.sck(spi_sck),
+	.done(spi_done),
+	.din(8'hff),
+	.dout(spi_dout)
 	);
 	
 	serial_rx #(.CLK_PER_BIT(100), .CTR_SIZE(7)) serial_rx (
-		.clk(clk),
-		.rst(n_rdy),
-		.rx(rx),
-		.data(rx_data),
-		.new_data(new_rx_data)
+	.clk(clk),
+	.rst(n_rdy),
+	.rx(rx),
+	.data(rx_data),
+	.new_data(new_rx_data)
 	);
 	
 	serial_tx #(.CLK_PER_BIT(100), .CTR_SIZE(7)) serial_tx (
-		.clk(clk),
-		.rst(n_rdy),
-		.tx(tx_m),
-		.block(tx_block),
-		.busy(tx_busy),
-		.data(tx_data),
-		.new_data(new_tx_data)
+	.clk(clk),
+	.rst(n_rdy),
+	.tx(tx_m),
+	.block(tx_block),
+	.busy(tx_busy),
+	.data(tx_data),
+	.new_data(new_tx_data)
 	);
 	
 	assign new_sample = new_sample_q;

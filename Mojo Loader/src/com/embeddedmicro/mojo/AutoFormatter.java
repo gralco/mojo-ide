@@ -22,6 +22,7 @@ public class AutoFormatter implements ExtendedModifyListener {
 	}
 
 	public void updateIndentList() {
+		System.out.println("updating list");
 		ANTLRInputStream input = new ANTLRInputStream(editor.getText());
 		Verilog2001Lexer lexer = new Verilog2001Lexer(input);
 		final CommonTokenStream tokens = new CommonTokenStream(lexer);

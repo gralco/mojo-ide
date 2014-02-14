@@ -19,6 +19,6 @@ module mojo_top(
 	assign avr_rx = 1'bz;
 	assign spi_channel = 4'bzzzz;
 	
-	assign led = 8'b0;
+	assign led = 8'h00;
 	
 endmodule

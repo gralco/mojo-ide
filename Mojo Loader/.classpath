@@ -18,6 +18,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/Mojo Loader/doc/commons-io-2.4-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/antlr-runtime-4.1.jar" sourcepath="doc/antlr4-master.zip"/>
+	<classpathentry kind="lib" path="lib/antlr-runtime-4.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

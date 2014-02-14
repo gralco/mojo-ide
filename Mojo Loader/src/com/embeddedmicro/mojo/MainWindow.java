@@ -43,6 +43,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
+import org.eclipse.swt.events.ArmListener;
+import org.eclipse.swt.events.ArmEvent;
 
 public class MainWindow implements Callback {
 	private static final String VERSION = "0.0.2 Pre-Alpha Preview";
@@ -142,39 +144,37 @@ public class MainWindow implements Callback {
 		}
 	}
 
-	private void updatePorts(MenuItem portMenu) {
-		ArrayList<String> ports = MojoLoader.listPorts();
-		Menu menu = portMenu.getMenu();
-		MenuItem[] items = menu.getItems();
-		for (MenuItem i : items)
-			i.dispose();
-		if (ports.size() != 0) {
-			Object[] array = ports.toArray();
-			String selectedPort = Settings.settings.get(Settings.MOJO_PORT, "");
-
-			for (int i = 0; i < array.length; i++) {
-				MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
-				menuItem.setText((String) array[i]);
-				menuItem.addSelectionListener(new SelectionListener() {
-					@Override
-					public void widgetDefaultSelected(SelectionEvent event) {
-						widgetSelected(event);
-					}
-
-					@Override
-					public void widgetSelected(SelectionEvent event) {
-						Settings.settings.put(Settings.MOJO_PORT,
-								((MenuItem) event.widget).getText());
-					}
-				});
-				if (menuItem.getText().equals(selectedPort))
-					menuItem.setSelection(true);
-			}
-		} else {
-			MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
-			menuItem.setText("No Serial Ports!");
-		}
-	}
+	// private void updatePorts(MenuItem portMenu) {
+	// ArrayList<String> ports = MojoLoader.listPorts();
+	// for (MenuItem i : items)
+	// i.dispose();
+	// if (ports.size() != 0) {
+	// Object[] array = ports.toArray();
+	// String selectedPort = Settings.settings.get(Settings.MOJO_PORT, "");
+	//
+	// for (int i = 0; i < array.length; i++) {
+	// MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
+	// menuItem.setText((String) array[i]);
+	// menuItem.addSelectionListener(new SelectionListener() {
+	// @Override
+	// public void widgetDefaultSelected(SelectionEvent event) {
+	// widgetSelected(event);
+	// }
+	//
+	// @Override
+	// public void widgetSelected(SelectionEvent event) {
+	// Settings.settings.put(Settings.MOJO_PORT,
+	// ((MenuItem) event.widget).getText());
+	// }
+	// });
+	// if (menuItem.getText().equals(selectedPort))
+	// menuItem.setSelection(true);
+	// }
+	// } else {
+	// MenuItem menuItem = new MenuItem(menu, SWT.RADIO);
+	// menuItem.setText("No Serial Ports!");
+	// }
+	// }
 
 	private boolean saveAll(boolean ask) {
 		for (StyledCodeEditor editor : editors) {
@@ -243,14 +243,14 @@ public class MainWindow implements Callback {
 
 	private void loadFonts() {
 		int fontsLoaded = 0;
-		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-R.ttf") ? fontsLoaded + 1
-				: fontsLoaded;
-		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-RI.ttf") ? fontsLoaded + 1
-				: fontsLoaded;
-		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-B.ttf") ? fontsLoaded + 1
-				: fontsLoaded;
-		fontsLoaded = display.loadFont("res"+File.separatorChar+"UbuntuMono-BI.ttf") ? fontsLoaded + 1
-				: fontsLoaded;
+		fontsLoaded = display.loadFont("res" + File.separatorChar
+				+ "UbuntuMono-R.ttf") ? fontsLoaded + 1 : fontsLoaded;
+		fontsLoaded = display.loadFont("res" + File.separatorChar
+				+ "UbuntuMono-RI.ttf") ? fontsLoaded + 1 : fontsLoaded;
+		fontsLoaded = display.loadFont("res" + File.separatorChar
+				+ "UbuntuMono-B.ttf") ? fontsLoaded + 1 : fontsLoaded;
+		fontsLoaded = display.loadFont("res" + File.separatorChar
+				+ "UbuntuMono-BI.ttf") ? fontsLoaded + 1 : fontsLoaded;
 		if (fontsLoaded != 4) {
 			showError("Could not load the fonts! Only " + fontsLoaded
 					+ " out of 4 fonts were loaded.");
@@ -419,31 +419,32 @@ public class MainWindow implements Callback {
 		MenuItem mntmSettings = new MenuItem(menu, SWT.CASCADE);
 		mntmSettings.setText("Settings");
 
-		Menu menu_2 = new Menu(mntmSettings);
+		final Menu menu_2 = new Menu(mntmSettings);
 		mntmSettings.setMenu(menu_2);
 
-		final MenuItem mntmSerialPort_1 = new MenuItem(menu_2, SWT.CASCADE);
-		mntmSerialPort_1.addSelectionListener(new SelectionAdapter() {
+		MenuItem mntmSerialPort = new MenuItem(menu_2, SWT.NONE);
+		mntmSerialPort.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				System.out.println("Selected " + e.text);
+				ArrayList<String> p = MojoLoader.listPorts();
+				String[] ports = p.toArray(new String[p.size()]);
+				if (ports.length > 0) {
+					SerialPortSelector dialog = new SerialPortSelector(
+							shlMojoLoader, ports);
+					String port = dialog.open();
+					System.out.println(port);
+					if (port != null)
+						Settings.settings.put(Settings.MOJO_PORT, port);
+				} else {
+					MessageBox box = new MessageBox(shlMojoLoader,
+							SWT.ICON_ERROR | SWT.OK);
+					box.setText("No Serial Ports Detected!");
+					box.setMessage("No serial ports were detected. Make sure your Mojo is connected and the drivers are loaded.");
+					box.open();
+				}
 			}
 		});
-
-		mntmSerialPort_1.setText("Serial Port");
-
-		Menu menu_3 = new Menu(mntmSerialPort_1);
-		mntmSerialPort_1.setMenu(menu_3);
-		menu_3.addListener(SWT.Show, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				updatePorts(mntmSerialPort_1);
-			}
-		});
-
-		MenuItem mntmNoSerialPorts = new MenuItem(menu_3, SWT.RADIO);
-		mntmNoSerialPorts.setText("No Serial Ports!");
+		mntmSerialPort.setText("Serial Port");
 
 		MenuItem mntmPlanaheadLocation = new MenuItem(menu_2, SWT.NONE);
 		mntmPlanaheadLocation.addSelectionListener(new SelectionAdapter() {

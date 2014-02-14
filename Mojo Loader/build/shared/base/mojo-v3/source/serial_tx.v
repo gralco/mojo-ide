@@ -13,9 +13,9 @@ module serial_tx #(
 	
 	localparam STATE_SIZE = 2;
 	localparam IDLE = 2'd0,
-			START_BIT = 2'd1,
-			DATA = 2'd2,
-			STOP_BIT = 2'd3;
+		START_BIT = 2'd1,
+		DATA = 2'd2,
+		STOP_BIT = 2'd3;
 	
 	reg [CTR_SIZE-1:0] ctr_d, ctr_q;
 	reg [2:0] bit_ctr_d, bit_ctr_q;

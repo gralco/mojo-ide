@@ -130,6 +130,8 @@ public class MojoLoader {
 	}
 
 	private void restartMojo() throws InterruptedException {
+		serialPort.setDTR(false);
+		Thread.sleep(5);
 		for (int i = 0; i < 5; i++) {
 			serialPort.setDTR(false);
 			Thread.sleep(5);
@@ -287,7 +289,7 @@ public class MojoLoader {
 					updateProgress(100);
 					printText("");
 
-					if (read(1000) != 'D') {
+					if (read(2000) != 'D') {
 						onError("Mojo did not acknowledge the transfer!");
 						bin.close();
 						return;
