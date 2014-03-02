@@ -55,9 +55,10 @@ public class LineStyler implements LineStyleListener, ModifyListener {
 
 		ANTLRInputStream input = new ANTLRInputStream(styledText.getText());
 		Verilog2001Lexer lexer = new Verilog2001Lexer(input);
+		lexer.removeErrorListeners();
 		CommonTokenStream tokens = new CommonTokenStream(lexer);
 
-		event.styles = listener.getStyles(tokens);
+		event.styles = listener.getStyles(tokens, event.styles);
 
 		List<Token> blockComments = tokens.getTokens(0, tokens.size() - 1,
 				Verilog2001Lexer.Block_comment);

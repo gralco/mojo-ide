@@ -56,7 +56,7 @@ public class Theme {
 		toolBarClickColor = new Color(display, 35, 160, 35);
 		consoleBackgroundColor = editorBackgroundColor;
 		consoleForgoundColor = editorForegroundColor;
-		errorTextColor = new Color(display, 255, 75, 75);
+		errorTextColor = new Color(display, 255, 25, 25);
 		set = true;
 	}
 

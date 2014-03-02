@@ -43,8 +43,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
-import org.eclipse.swt.events.ArmListener;
-import org.eclipse.swt.events.ArmEvent;
 
 public class MainWindow implements Callback {
 	private static final String VERSION = "0.0.2 Pre-Alpha Preview";

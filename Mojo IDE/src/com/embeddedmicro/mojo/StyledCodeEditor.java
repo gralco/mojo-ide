@@ -33,7 +33,6 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 	public StyledCodeEditor(Composite parent, int style, CTabFolder tabFolder,
 			String file) {
 		super(parent, style);
-		
 		this.tabFolder = tabFolder;
 		
 		setAlwaysShowScrollBars(false);
@@ -44,6 +43,10 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		addExtendedModifyListener(highligher);
 		setSelectionBackground(new Color(getDisplay(), 100, 100, 100));
 		setSelectionForeground(null);
+		
+		ErrorChecker errorChecker = new ErrorChecker(this);
+		addLineStyleListener(errorChecker);
+		addModifyListener(errorChecker);
 
 		LineStyler styler = new LineStyler(this);
 		addLineStyleListener(styler);

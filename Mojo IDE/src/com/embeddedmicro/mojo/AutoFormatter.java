@@ -4,10 +4,6 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 import com.embeddedmicro.mojo.parser.Verilog2001Parser;
@@ -16,19 +12,21 @@ public class AutoFormatter implements ExtendedModifyListener {
 	private StyledCodeEditor editor;
 	private IndentListener indentListener;
 
+
 	public AutoFormatter(StyledCodeEditor editor) {
 		this.editor = editor;
 		indentListener = new IndentListener();
 	}
 
 	public void updateIndentList() {
-		System.out.println("updating list");
 		ANTLRInputStream input = new ANTLRInputStream(editor.getText());
 		Verilog2001Lexer lexer = new Verilog2001Lexer(input);
+		lexer.removeErrorListeners();
 		final CommonTokenStream tokens = new CommonTokenStream(lexer);
 		Verilog2001Parser parser = new Verilog2001Parser(tokens);
 		indentListener.initWalk(editor, tokens);
 		parser.addParseListener(indentListener);
+		parser.removeErrorListeners();
 		parser.source_text();
 	}
 

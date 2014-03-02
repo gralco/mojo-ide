@@ -45,12 +45,12 @@ public class IndentListener extends Verilog2001BaseListener {
 		}
 	}
 
-	private void addIndents(int start, int end) {
-		for (int i = text.getLineAtOffset(start) + 1; i < text
-				.getLineAtOffset(end); i++) {
-			tabs[i]++;
-		}
-	}
+//	private void addIndents(int start, int end) {
+//		for (int i = text.getLineAtOffset(start) + 1; i < text
+//				.getLineAtOffset(end); i++) {
+//			tabs[i]++;
+//		}
+//	}
 
 	private void addIndentsToEnd(int start, int end) {
 		for (int i = text.getLineAtOffset(start) + 1; i <= text

@@ -1,32 +1,17 @@
 package com.embeddedmicro.mojo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
 
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Always_constructContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Case_statementContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Conditional_statementContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Continuous_assignContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Input_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Local_parameter_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Module_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Module_keywordContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Net_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.NumberContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Output_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Reg_declarationContext;
-import com.embeddedmicro.mojo.parser.Verilog2001Parser.Seq_blockContext;
 
 public class StyleTokenReader {
 	private static final String KEYWORDS = "always|begin|end|assign|if|for|else|case|endcase|"
@@ -36,7 +21,7 @@ public class StyleTokenReader {
 
 	private ArrayList<StyleRange> styles = new ArrayList<StyleRange>();
 
-	public StyleRange[] getStyles(CommonTokenStream tokens) {
+	public StyleRange[] getStyles(CommonTokenStream tokens, StyleRange[] curStyles) {
 		styles.clear();
 		tokens.fill();
 
@@ -75,6 +60,8 @@ public class StyleTokenReader {
 			}
 		}
 
+		styles.addAll(Arrays.asList(curStyles));
+		
 		Collections.sort(styles, new Comparator<StyleRange>() {
 			@Override
 			public int compare(StyleRange o1, StyleRange o2) {
