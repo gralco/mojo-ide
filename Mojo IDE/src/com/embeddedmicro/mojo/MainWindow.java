@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 public class MainWindow implements Callback {
-	private static final String VERSION = "0.0.2 Pre-Alpha Preview";
+	private static final String VERSION = "0.0.3 Pre-Alpha Preview";
 
 	protected final Display display = Display.getDefault();
 	protected Shell shlMojoLoader;
