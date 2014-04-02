@@ -1,9 +1,11 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import org.eclipse.swt.custom.CaretEvent;
 import org.eclipse.swt.custom.CaretListener;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
+
+import com.embeddedmicro.mojo.gui.StyledCodeEditor;
 
 public class LineHighlighter implements CaretListener, ExtendedModifyListener {
 

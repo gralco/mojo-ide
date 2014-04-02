@@ -1,7 +1,10 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
+
+import com.embeddedmicro.mojo.gui.Style;
+import com.embeddedmicro.mojo.gui.Theme;
 
 public class SyntaxFormat {
 

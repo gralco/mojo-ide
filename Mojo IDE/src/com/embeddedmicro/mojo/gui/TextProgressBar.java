@@ -9,7 +9,7 @@
  *     Luis Carlos Moreira da Costa (tcljava at gmail dot com) - initial API and implementation
  *     Laurent CARON (laurent.caron at gmail dot com) - code review
  *******************************************************************************/
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;

@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.project;
 
 public class SourceFile {
 	public static final int SOURCE = 0;

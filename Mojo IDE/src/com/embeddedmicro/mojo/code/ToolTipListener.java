@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -7,7 +7,8 @@ import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.ToolTip;
 
-import com.embeddedmicro.mojo.ErrorChecker.SyntaxError;
+import com.embeddedmicro.mojo.code.ErrorChecker.SyntaxError;
+import com.embeddedmicro.mojo.gui.StyledCodeEditor;
 
 public class ToolTipListener implements MouseTrackListener, MouseMoveListener {
 

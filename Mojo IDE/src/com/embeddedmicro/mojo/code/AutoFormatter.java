@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -6,6 +6,7 @@ import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 
+import com.embeddedmicro.mojo.gui.StyledCodeEditor;
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 import com.embeddedmicro.mojo.parser.Verilog2001Parser;
 

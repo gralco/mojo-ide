@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +43,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.wb.swt.SWTResourceManager;
+
+import com.embeddedmicro.mojo.Settings;
+import com.embeddedmicro.mojo.code.ParseException;
+import com.embeddedmicro.mojo.hardware.Callback;
+import com.embeddedmicro.mojo.hardware.MojoLoader;
+import com.embeddedmicro.mojo.project.Project;
+import com.embeddedmicro.mojo.project.ProjectBuilder;
+import com.embeddedmicro.mojo.project.SourceFile;
 
 public class MainWindow implements Callback {
 	private static final String VERSION = "0.0.3 Pre-Alpha Preview";

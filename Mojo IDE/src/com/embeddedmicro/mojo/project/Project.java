@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.project;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,6 +21,9 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+
+import com.embeddedmicro.mojo.code.ParseException;
+import com.embeddedmicro.mojo.project.Tags.Attributes;
 
 public class Project {
 	private ArrayList<String> sourceFiles;

@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.project;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -15,7 +15,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
+import com.embeddedmicro.mojo.Settings;
 import com.embeddedmicro.mojo.boards.Boards;
+import com.embeddedmicro.mojo.gui.Theme;
 
 public class ProjectBuilder {
 
@@ -179,8 +181,8 @@ public class ProjectBuilder {
 
 	private void generateProjectFile(BufferedWriter file) throws IOException {
 		final String nl = System.lineSeparator();
-		// final String ps = File.separator;
 		final String ps = "/"; // the tcl script expects / for all OS's
+		
 		file.write("set projDir \"" + workFolder.replace("\\", "/") + ps
 				+ projectDir + "\"" + nl);
 		file.write("set projName " + project.getProjectName() + nl);

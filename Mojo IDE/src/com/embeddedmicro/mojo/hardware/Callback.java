@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.hardware;
 
 public interface Callback {
 	public void onSuccess();

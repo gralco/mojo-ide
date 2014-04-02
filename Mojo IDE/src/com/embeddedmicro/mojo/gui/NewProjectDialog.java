@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.embeddedmicro.mojo.boards.Board;
 import com.embeddedmicro.mojo.boards.Boards;
+import com.embeddedmicro.mojo.project.Project;
 
 public class NewProjectDialog extends Dialog {
 

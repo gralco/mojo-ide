@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import java.util.ArrayList;
 
@@ -16,6 +16,8 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Display;
 
+import com.embeddedmicro.mojo.gui.StyledCodeEditor;
+import com.embeddedmicro.mojo.gui.Theme;
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 import com.embeddedmicro.mojo.parser.Verilog2001Parser;
 

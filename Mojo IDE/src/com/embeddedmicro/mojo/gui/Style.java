@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import org.eclipse.swt.graphics.Color;
 

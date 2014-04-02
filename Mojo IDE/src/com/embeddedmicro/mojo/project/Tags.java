@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.project;
 
 public class Tags {
 	public final static String project = "project";

@@ -1,8 +1,9 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+
 
 public class HotKeys implements KeyListener {
 	private StyledCodeEditor editor;

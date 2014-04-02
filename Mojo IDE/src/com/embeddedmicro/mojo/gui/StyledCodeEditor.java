@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,6 +18,12 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+
+import com.embeddedmicro.mojo.code.AutoFormatter;
+import com.embeddedmicro.mojo.code.ErrorChecker;
+import com.embeddedmicro.mojo.code.LineHighlighter;
+import com.embeddedmicro.mojo.code.LineStyler;
+import com.embeddedmicro.mojo.code.ToolTipListener;
 
 public class StyledCodeEditor extends StyledText implements ModifyListener {
 
@@ -55,7 +61,6 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		LineStyler styler = new LineStyler(this);
 		addLineStyleListener(styler);
 		addModifyListener(styler);
-		addLineBackgroundListener(new LineBackground());
 		setTabs(2);
 
 		setFont(new Font(getDisplay(), "Ubuntu Mono", 12, SWT.NORMAL));

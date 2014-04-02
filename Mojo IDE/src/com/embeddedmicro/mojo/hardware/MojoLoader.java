@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.hardware;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -17,6 +17,8 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Display;
+
+import com.embeddedmicro.mojo.gui.Theme;
 
 public class MojoLoader {
 	private Display display;

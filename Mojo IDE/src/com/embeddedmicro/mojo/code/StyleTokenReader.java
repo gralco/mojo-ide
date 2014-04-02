@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +11,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
 
+import com.embeddedmicro.mojo.gui.Theme;
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 
 public class StyleTokenReader {

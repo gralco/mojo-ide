@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import java.util.Arrays;
 import java.util.List;

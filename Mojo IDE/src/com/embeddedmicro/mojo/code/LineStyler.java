@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 import java.util.List;
 
@@ -15,6 +15,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.GlyphMetrics;
 
+import com.embeddedmicro.mojo.gui.Theme;
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 
 public class LineStyler implements LineStyleListener, ModifyListener {

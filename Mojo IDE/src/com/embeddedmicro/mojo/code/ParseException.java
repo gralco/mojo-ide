@@ -1,4 +1,4 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.code;
 
 public class ParseException extends Exception {
 	private static final long serialVersionUID = 1L;

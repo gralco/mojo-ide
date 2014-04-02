@@ -1,9 +1,10 @@
-package com.embeddedmicro.mojo;
+package com.embeddedmicro.mojo.gui;
 
 import java.util.Stack;
 
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
+
 
 public class UndoRedo implements ExtendedModifyListener {
 
