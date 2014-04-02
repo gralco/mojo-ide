@@ -21,7 +21,7 @@ import com.embeddedmicro.mojo.parser.Verilog2001Parser;
 
 public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 		LineStyleListener, Runnable {
-	private ArrayList<StyleRange> styles = new ArrayList<StyleRange>();
+	private ArrayList<SyntaxError> errors = new ArrayList<SyntaxError>();
 	private StyledCodeEditor editor;
 	private String text;
 	private Display display;
@@ -38,7 +38,7 @@ public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 		final CommonTokenStream tokens = new CommonTokenStream(lexer);
 		Verilog2001Parser parser = new Verilog2001Parser(tokens);
 		parser.removeErrorListeners();
-		styles.clear();
+		errors.clear();
 		parser.addErrorListener(this);
 		parser.source_text();
 
@@ -54,11 +54,10 @@ public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 	public void syntaxError(Recognizer<?, ?> recognizer,
 			Object offendingSymbol, int line, int charPositionInLine,
 			String msg, RecognitionException e) {
-
-		underlineError((Token) offendingSymbol);
+		underlineError((Token) offendingSymbol, msg);
 	}
 
-	protected void underlineError(Token offendingToken) {
+	protected void underlineError(Token offendingToken, String message) {
 		int start = offendingToken.getStartIndex();
 		int stop = offendingToken.getStopIndex();
 		StyleRange style = new StyleRange();
@@ -67,7 +66,7 @@ public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 		style.underline = true;
 		style.underlineColor = Theme.errorTextColor;
 		style.underlineStyle = SWT.UNDERLINE_SINGLE;
-		styles.add(style);
+		errors.add(new SyntaxError(style, message, start, stop));
 	}
 
 	@Override
@@ -79,7 +78,7 @@ public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 
 	@Override
 	public void run() {
-		synchronized (styles) {
+		synchronized (errors) {
 			updateErrors();
 		}
 	}
@@ -87,8 +86,37 @@ public class ErrorChecker extends BaseErrorListener implements ModifyListener,
 
 	@Override
 	public void lineGetStyle(LineStyleEvent event) {
-		synchronized (styles) {
-			event.styles = styles.toArray(new StyleRange[styles.size()]);
+		synchronized (errors) {
+			StyleRange[] styles = new StyleRange[errors.size()];
+			for (int i = 0; i < errors.size(); i++){
+				styles[i] = errors.get(i).style;
+			}
+			event.styles = styles;
+		}
+	}
+	
+	public SyntaxError getErrorAtOffset(int pos){
+		for (SyntaxError e : errors){
+			if (e.start <= pos && e.stop >= pos)
+				return e;
+		}
+		return null;
+	}
+	
+	public class SyntaxError {
+		public StyleRange style;
+		public String message;
+		public int start;
+		public int stop;
+		
+		public SyntaxError(){
+		}
+		
+		public SyntaxError(StyleRange style, String msg, int start, int stop){
+			this.style = style;
+			this.message = msg;
+			this.start = start;
+			this.stop = stop;
 		}
 	}
 }

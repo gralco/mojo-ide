@@ -34,9 +34,9 @@ public class Theme {
 	public static void initColors(Display display) {
 		moduleColor = new Color(display, 10, 191, 10);
 		keyWordColor = new Color(display, 10, 191, 191);
-		valueColor = new Color(display, 10, 191, 100);
+		valueColor = new Color(display, 162, 105, 220);
 		varTypeColor = new Color(display, 10, 141, 191);
-		operatorColor = new Color(display, 191, 10, 100);
+		operatorColor = new Color(display, 237, 67, 67);
 		commentColor = new Color(display, 150, 150, 150);
 		stringColor = new Color(display, 191, 191, 10);
 		instantiationColor = new Color(display, 234, 182, 123);

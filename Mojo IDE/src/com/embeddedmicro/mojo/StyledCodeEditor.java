@@ -47,6 +47,10 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		ErrorChecker errorChecker = new ErrorChecker(this);
 		addLineStyleListener(errorChecker);
 		addModifyListener(errorChecker);
+		
+		ToolTipListener tooltips = new ToolTipListener(this, errorChecker);
+		addMouseTrackListener(tooltips);
+		addMouseMoveListener(tooltips);
 
 		LineStyler styler = new LineStyler(this);
 		addLineStyleListener(styler);
@@ -68,7 +72,7 @@ public class StyledCodeEditor extends StyledText implements ModifyListener {
 		tabItem.setControl(this);
 		
 		formatter = new AutoFormatter(this);
-		addExtendedModifyListener(formatter);
+		addVerifyListener(formatter);
 		
 		opened = openFile(file);
 

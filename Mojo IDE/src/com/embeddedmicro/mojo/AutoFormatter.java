@@ -4,14 +4,15 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 
 import com.embeddedmicro.mojo.parser.Verilog2001Lexer;
 import com.embeddedmicro.mojo.parser.Verilog2001Parser;
 
-public class AutoFormatter implements ExtendedModifyListener {
+public class AutoFormatter implements VerifyListener {
 	private StyledCodeEditor editor;
 	private IndentListener indentListener;
-
 
 	public AutoFormatter(StyledCodeEditor editor) {
 		this.editor = editor;
@@ -53,29 +54,52 @@ public class AutoFormatter implements ExtendedModifyListener {
 		return text.toString();
 	}
 
-	private void unindent(ExtendedModifyEvent e) {
+	private void unindent(VerifyEvent e) {
 
 	}
 
-	@Override
 	public void modifyText(ExtendedModifyEvent e) {
 		if (e.length > 0) {
-			String text = editor.getText(e.start, e.start + e.length-1);
+			String text = editor.getText(e.start, e.start + e.length - 1);
 			if (text.equals("\n") || text.equals("\r\n")) {
+				System.out.println("Updating indent");
 				updateIndentList();
 
-				StringBuilder newText = new StringBuilder(text);
+				StringBuilder newText = new StringBuilder();
 				int lineNum = editor.getLineAtOffset(e.start);
 				int tabs = indentListener.getTabs(lineNum + 1);
 
 				for (int i = 0; i < tabs; i++) {
 					newText.append('\t');
 				}
-				editor.replaceTextRange(e.start, e.length, newText.toString());
-
+				editor.replaceTextRange(e.start + e.length, 0,
+						newText.toString());
+				editor.setCaretOffset(e.start + e.length + newText.length());
 			} else {
-				unindent(e);
+				// unindent(e);
 			}
+		}
+	}
+
+	private int countIndents(String line) {
+		int idx = 0;
+		while (idx < line.length() && line.charAt(idx) == '\t')
+			idx++;
+		return idx;
+	}
+
+	@Override
+	public void verifyText(VerifyEvent e) {
+		if (e.text.equals("\n") || e.text.equals("\r\n")) {
+			int indents = countIndents(editor.getLine(editor
+					.getLineAtOffset(e.start)));
+			StringBuilder newText = new StringBuilder(e.text);
+			for (int i = 0; i < indents; i++) {
+				newText.append('\t');
+			}
+			e.text = newText.toString();
+		} else {
+			unindent(e);
 		}
 	}
 }

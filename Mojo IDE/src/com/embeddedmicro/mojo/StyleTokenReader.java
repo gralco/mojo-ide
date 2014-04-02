@@ -43,9 +43,9 @@ public class StyleTokenReader {
 				addStyle(t.getStartIndex(), t.getStopIndex(), Theme.stringColor);
 				break;
 			default:
-				if (t.getText().matches("[*!~+#\\-/:@|&{}?^=><]+")) {
+				if (t.getText().matches("[*!~+#\\-/:@|&{}?^=><\\]\\[,();]+")) {
 					addStyle(t.getStartIndex(), t.getStopIndex(),
-							Theme.operatorColor, SWT.BOLD);
+							Theme.operatorColor);
 				} else if (t.getText().matches(KEYWORDS)) {
 					addStyle(t.getStartIndex(), t.getStopIndex(),
 							Theme.keyWordColor, SWT.BOLD);
@@ -55,8 +55,7 @@ public class StyleTokenReader {
 				} else if (t.getText().matches(MODULE)) {
 					addStyle(t.getStartIndex(), t.getStopIndex(),
 							Theme.moduleColor, SWT.BOLD);
-				}
-
+				} 
 			}
 		}
 
